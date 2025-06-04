@@ -19,11 +19,17 @@ const Recipients = () => {
     fetch('http://localhost:3000/api/data')
       .then(response => response.json())
       .then(data => {
-        setUsers(data.users);
-        setSignatureReasons(data.signatureReasons);
-        setOtherReasons(data.otherReasons);
+        setUsers(Array.isArray(data.users) ? data.users : []);
+        setSignatureReasons(Array.isArray(data.signatureReasons) ? data.signatureReasons : []);
+        setOtherReasons(Array.isArray(data.otherReasons) ? data.otherReasons : []);
       })
-      .catch(error => console.error('Error fetching data:', error));
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        // Set default empty arrays in case of error
+        setUsers([]);
+        setSignatureReasons([]);
+        setOtherReasons([]);
+      });
   }, []);
 
   const showToast = (message, type) => {
