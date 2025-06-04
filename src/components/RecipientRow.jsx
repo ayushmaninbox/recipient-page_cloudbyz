@@ -30,7 +30,12 @@ const RecipientRow = ({
 
   // Get initials from name
   const getInitials = (name) => {
-    return name.split(' ')[0][0].toUpperCase();
+    if (!name) return '';
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
   };
 
   // Handle outside click for dropdowns
@@ -128,16 +133,16 @@ const RecipientRow = ({
             className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
             onClick={() => setShowUserDropdown(true)}
           >
-            <User size={18} className="text-gray-500 mr-2" />
+            <User size={18} className="text-gray-500 mr-2 flex-shrink-0" />
             <input
               type="text"
               placeholder="Select or type a name"
-              className="flex-1 outline-none text-sm"
+              className="flex-1 outline-none text-sm min-w-0 truncate"
               value={searchTerm || recipient.name}
               onChange={handleUserInputChange}
               onFocus={() => setShowUserDropdown(true)}
             />
-            <ChevronDown size={16} className="text-gray-500" />
+            <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
           </div>
 
           {/* User dropdown */}
@@ -153,12 +158,12 @@ const RecipientRow = ({
                     className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center"
                     onClick={() => handleUserSelect(user)}
                   >
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
                       {getInitials(user.name)}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{user.name}</span>
-                      <span className="text-xs text-gray-500">{user.email}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate">{user.name}</span>
+                      <span className="text-xs text-gray-500 truncate">{user.email}</span>
                     </div>
                   </div>
                 ))
@@ -177,7 +182,7 @@ const RecipientRow = ({
               value={recipient.email}
               onChange={handleEmailChange}
               placeholder="Enter email"
-              className="flex-1 outline-none text-sm"
+              className="flex-1 outline-none text-sm min-w-0 truncate"
             />
           </div>
         </div>
@@ -191,12 +196,12 @@ const RecipientRow = ({
           >
             <input
               type="text"
-              placeholder="Select reason to sign"
-              className="flex-1 outline-none text-sm cursor-pointer"
+              placeholder={recipient.reason === 'Other' ? 'Type your reason' : 'Select reason to sign'}
+              className="flex-1 outline-none text-sm cursor-pointer min-w-0 truncate"
               value={recipient.reason}
               readOnly
             />
-            <ChevronDown size={16} className="text-gray-500" />
+            <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
           </div>
 
           {/* Reason dropdown */}
@@ -205,19 +210,25 @@ const RecipientRow = ({
               {getAllReasons().map((reason, i) => (
                 <div
                   key={i}
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm truncate"
                   onClick={() => handleReasonSelect(reason)}
                 >
                   {reason}
                 </div>
               ))}
+              <div
+                className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                onClick={() => handleReasonSelect('Other')}
+              >
+                Other
+              </div>
             </div>
           )}
         </div>
 
         {/* Delete button */}
         <button 
-          className="ml-2 text-red-500 hover:text-red-700 transition-colors p-1"
+          className="ml-2 text-red-500 hover:text-red-700 transition-colors p-1 flex-shrink-0"
           onClick={() => deleteRecipient(index)}
         >
           <Trash2 size={20} />
