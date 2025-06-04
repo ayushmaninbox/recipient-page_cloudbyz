@@ -46,14 +46,15 @@ const RecipientRow = ({
         setShowUserDropdown(false);
       }
       
-      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target)) {
+      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target) &&
+          !isCustomReason) {
         setShowReasonDropdown(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isCustomReason]);
 
   // Handle user selection
   const handleUserSelect = (user) => {
@@ -84,14 +85,16 @@ const RecipientRow = ({
     if (reason === 'Other') {
       setIsCustomReason(true);
       updateRecipient(index, { ...recipient, reason: '' });
-      if (customReasonInputRef.current) {
-        customReasonInputRef.current.focus();
-      }
+      setTimeout(() => {
+        if (customReasonInputRef.current) {
+          customReasonInputRef.current.focus();
+        }
+      }, 0);
     } else {
       setIsCustomReason(false);
       updateRecipient(index, { ...recipient, reason });
+      setShowReasonDropdown(false);
     }
-    setShowReasonDropdown(false);
   };
 
   // Handle custom reason change
@@ -106,6 +109,13 @@ const RecipientRow = ({
       setCustomReasons([...customReasons, recipient.reason]);
     }
     setIsCustomReason(false);
+  };
+
+  // Handle custom reason key press
+  const handleCustomReasonKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleCustomReasonSubmit();
+    }
   };
 
   // Combined reason options
@@ -206,6 +216,7 @@ const RecipientRow = ({
                   value={recipient.reason}
                   onChange={handleCustomReasonChange}
                   onBlur={handleCustomReasonSubmit}
+                  onKeyPress={handleCustomReasonKeyPress}
                   placeholder="Type your reason"
                   className="flex-1 outline-none text-sm min-w-0"
                   maxLength={25}
@@ -227,9 +238,9 @@ const RecipientRow = ({
           </div>
 
           {/* Reason dropdown */}
-          {showReasonDropdown && (
-            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
-              <div className="max-h-48 overflow-y-auto">
+          {showReasonDropdown && !isCustomReason && (
+            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+              <div className="max-h-48 overflow-y-auto py-1">
                 {allReasonOptions.map((reason, i) => (
                   <div
                     key={i}
