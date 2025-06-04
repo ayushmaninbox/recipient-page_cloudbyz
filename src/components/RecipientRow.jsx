@@ -28,11 +28,14 @@ const RecipientRow = ({
   const userDropdownRef = useRef(null);
   const reasonInputRef = useRef(null);
   const reasonDropdownRef = useRef(null);
+  const selectedUserRef = useRef(null);
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users
+    .filter(user => 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const getInitials = (name) => {
     if (!name) return '';
@@ -60,6 +63,19 @@ const RecipientRow = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (selectedUserRef.current && userDropdownRef.current) {
+      const dropdownRect = userDropdownRef.current.getBoundingClientRect();
+      const selectedRect = selectedUserRef.current.getBoundingClientRect();
+      
+      if (selectedRect.bottom > dropdownRect.bottom) {
+        userDropdownRef.current.scrollTop += selectedRect.bottom - dropdownRect.bottom;
+      } else if (selectedRect.top < dropdownRect.top) {
+        userDropdownRef.current.scrollTop -= dropdownRect.top - selectedRect.top;
+      }
+    }
+  }, [selectedUserIndex]);
 
   const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
@@ -241,6 +257,7 @@ const RecipientRow = ({
                 filteredUsers.map((user, i) => (
                   <div
                     key={i}
+                    ref={selectedUserIndex === i ? selectedUserRef : null}
                     className={`px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center ${
                       selectedUserIndex === i ? 'bg-blue-50' : ''
                     }`}
