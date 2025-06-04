@@ -12,6 +12,7 @@ const Recipients = () => {
   const [users, setUsers] = useState([]);
   const [signatureReasons, setSignatureReasons] = useState([]);
   const [otherReasons, setOtherReasons] = useState([]);
+  const [tempReasons, setTempReasons] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
@@ -79,7 +80,45 @@ const Recipients = () => {
     setRecipients(items);
   };
 
-  const handleNext = () => {
+  const addTempReason = (reason) => {
+    if (!tempReasons.includes(reason)) {
+      setTempReasons([...tempReasons, reason]);
+    }
+  };
+
+  const handleNext = async () => {
+    const hasInvalidEmail = recipients.some(recipient => 
+      recipient.email && !recipient.email.includes('@')
+    );
+
+    if (hasInvalidEmail) {
+      showToast('Please enter valid email addresses', 'error');
+      return;
+    }
+
+    // Save all temp reasons to the backend
+    for (const reason of tempReasons) {
+      try {
+        await fetch('http://localhost:3000/api/reasons', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            reason,
+            addToSignatureReasons: true
+          }),
+        });
+      } catch (error) {
+        console.error('Error saving reason:', error);
+      }
+    }
+
+    if (tempReasons.length > 0) {
+      showToast('Successfully saved all new reasons', 'success');
+      setTempReasons([]);
+    }
+
     console.log('Proceeding with recipients:', recipients);
   };
 
@@ -132,13 +171,12 @@ const Recipients = () => {
                         updateRecipient={updateRecipient}
                         deleteRecipient={deleteRecipient}
                         users={users}
-                        reasonOptions={signatureReasons}
+                        reasonOptions={[...signatureReasons, ...tempReasons]}
                         otherReasons={otherReasons}
                         onDeleteReason={deleteReason}
                         showOrder={showSignInOrder}
                         colors={recipientColors}
-                        onReasonSaved={() => showToast('New reason successfully saved', 'success')}
-                        onReasonSaveFailed={() => showToast('Failed adding a new reason', 'error')}
+                        onAddTempReason={addTempReason}
                       />
                     ))}
                   </div>

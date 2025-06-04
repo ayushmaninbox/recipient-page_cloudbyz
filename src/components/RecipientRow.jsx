@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, ChevronDown, Trash2, GripVertical, FileText, X } from 'lucide-react';
+import { User, ChevronDown, Trash2, GripVertical, FileText, X, Mail } from 'lucide-react';
 import { Draggable } from 'react-beautiful-dnd';
 
 const RecipientRow = ({ 
@@ -13,8 +13,7 @@ const RecipientRow = ({
   reasonOptions,
   otherReasons,
   onDeleteReason,
-  onReasonSaved,
-  onReasonSaveFailed
+  onAddTempReason
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
@@ -185,29 +184,11 @@ const RecipientRow = ({
     setSelectedReasonIndex(-1);
   };
 
-  const handleSaveCustomReason = async () => {
+  const handleSaveCustomReason = () => {
     if (customReason.trim()) {
-      try {
-        const response = await fetch('http://localhost:3000/api/reasons', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            reason: customReason.trim(),
-            addToSignatureReasons: true
-          }),
-        });
-        
-        if (response.ok) {
-          updateRecipient(index, { ...recipient, reason: customReason.trim() });
-          setIsCustomReason(false);
-          onReasonSaved();
-        }
-      } catch (error) {
-        console.error('Failed to save custom reason:', error);
-        onReasonSaveFailed();
-      }
+      onAddTempReason(customReason.trim());
+      updateRecipient(index, { ...recipient, reason: customReason.trim() });
+      setIsCustomReason(false);
     }
   };
 
@@ -299,12 +280,15 @@ const RecipientRow = ({
 
         <div className="relative flex-1 min-w-0 mx-2">
           <div className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 bg-white">
+            <Mail size={18} className="text-gray-500 mr-2 flex-shrink-0" />
             <input
               type="email"
               value={recipient.email}
               onChange={handleEmailChange}
               placeholder="Enter email"
-              className="flex-1 outline-none text-sm min-w-0 truncate"
+              className={`flex-1 outline-none text-sm min-w-0 truncate ${
+                recipient.email && !recipient.email.includes('@') ? 'text-red-500' : ''
+              }`}
             />
           </div>
         </div>
