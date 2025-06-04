@@ -194,6 +194,13 @@ const RecipientRow = ({
     }
   };
 
+  useEffect(() => {
+    if (isCustomReason && customReason.trim()) {
+      onAddTempReason(customReason.trim());
+      updateRecipient(index, { ...recipient, reason: customReason.trim() });
+    }
+  }, [customReason]);
+
   const handleUserInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -209,7 +216,6 @@ const RecipientRow = ({
   const handleCustomReasonChange = (e) => {
     const value = e.target.value;
     setCustomReason(value);
-    updateRecipient(index, { ...recipient, reason: value });
   };
 
   const content = (
