@@ -12,7 +12,9 @@ const RecipientRow = ({
   colors,
   reasonOptions,
   otherReasons,
-  onDeleteReason
+  onDeleteReason,
+  onReasonSaved,
+  onReasonSaveFailed
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
@@ -27,13 +29,11 @@ const RecipientRow = ({
   const reasonInputRef = useRef(null);
   const reasonDropdownRef = useRef(null);
 
-  // Filter users based on search term
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Get initials from name
   const getInitials = (name) => {
     if (!name) return '';
     const names = name.split(' ');
@@ -43,7 +43,6 @@ const RecipientRow = ({
     return name[0].toUpperCase();
   };
 
-  // Handle outside click for dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
@@ -62,7 +61,6 @@ const RecipientRow = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle user keyboard navigation
   const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
 
@@ -95,7 +93,6 @@ const RecipientRow = ({
     }
   };
 
-  // Handle reason keyboard navigation
   const handleReasonKeyDown = (e) => {
     if (isCustomReason) {
       if (e.key === 'Enter') {
@@ -134,7 +131,6 @@ const RecipientRow = ({
     }
   };
 
-  // Handle user selection
   const handleUserSelect = (user) => {
     updateRecipient(index, { 
       ...recipient,
@@ -146,7 +142,6 @@ const RecipientRow = ({
     setSelectedUserIndex(-1);
   };
 
-  // Handle reason selection
   const handleReasonSelect = (reason) => {
     if (reason === 'Other') {
       setIsCustomReason(true);
@@ -160,7 +155,6 @@ const RecipientRow = ({
     setSelectedReasonIndex(-1);
   };
 
-  // Handle saving custom reason
   const handleSaveCustomReason = async () => {
     if (customReason.trim()) {
       try {
@@ -175,14 +169,15 @@ const RecipientRow = ({
         if (response.ok) {
           updateRecipient(index, { ...recipient, reason: customReason.trim() });
           setIsCustomReason(false);
+          onReasonSaved();
         }
       } catch (error) {
         console.error('Failed to save custom reason:', error);
+        onReasonSaveFailed();
       }
     }
   };
 
-  // Handle user input change
   const handleUserInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -190,13 +185,11 @@ const RecipientRow = ({
     updateRecipient(index, { ...recipient, name: value });
   };
 
-  // Handle email change
   const handleEmailChange = (e) => {
     const value = e.target.value;
     updateRecipient(index, { ...recipient, email: value });
   };
 
-  // Handle custom reason change
   const handleCustomReasonChange = (e) => {
     const value = e.target.value;
     setCustomReason(value);
@@ -204,29 +197,26 @@ const RecipientRow = ({
   };
 
   const content = (
-    <div className="relative mb-4 bg-white rounded-lg shadow overflow-visible">
-      {/* Left color indicator */}
+    <div className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl">
       <div 
-        className="absolute left-0 top-0 bottom-0 w-1.5" 
+        className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl" 
         style={{ backgroundColor: colors[index % colors.length] }}
       />
 
-      <div className="flex items-center px-4 py-3">
-        {/* Order number */}
+      <div className="flex items-center px-6 py-4">
         {showOrder && (
-          <div className="flex items-center mr-2">
-            <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
+          <div className="flex items-center mr-3">
+            <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
               {index + 1}
             </span>
             <GripVertical size={18} className="ml-2 text-gray-400 cursor-move" />
           </div>
         )}
 
-        {/* User selection */}
         <div className="relative flex-1 min-w-0">
           <div 
             ref={userInputRef}
-            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 bg-white transition-all"
             onClick={() => setShowUserDropdown(true)}
           >
             <User size={18} className="text-gray-500 mr-2 flex-shrink-0" />
@@ -242,11 +232,10 @@ const RecipientRow = ({
             <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
           </div>
 
-          {/* User dropdown */}
           {showUserDropdown && (
             <div 
               ref={userDropdownRef} 
-              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, i) => (
@@ -274,9 +263,8 @@ const RecipientRow = ({
           )}
         </div>
 
-        {/* Email field */}
         <div className="relative flex-1 min-w-0 mx-2">
-          <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
+          <div className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 bg-white">
             <input
               type="email"
               value={recipient.email}
@@ -287,11 +275,10 @@ const RecipientRow = ({
           </div>
         </div>
 
-        {/* Reason selection */}
         <div className="relative flex-1 min-w-0">
           <div 
             ref={reasonInputRef}
-            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 bg-white transition-all"
             onClick={() => !isCustomReason && setShowReasonDropdown(true)}
           >
             <FileText size={18} className="text-gray-500 mr-2 flex-shrink-0" />
@@ -320,13 +307,11 @@ const RecipientRow = ({
             )}
           </div>
 
-          {/* Reason dropdown */}
           {showReasonDropdown && !isCustomReason && (
             <div 
               ref={reasonDropdownRef} 
-              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
-              {/* Default reasons */}
               {reasonOptions.map((reason, i) => (
                 <div
                   key={i}
@@ -340,7 +325,6 @@ const RecipientRow = ({
                 </div>
               ))}
 
-              {/* Custom reasons */}
               {otherReasons.map((reason, i) => (
                 <div
                   key={`custom-${i}`}
@@ -356,14 +340,13 @@ const RecipientRow = ({
                       e.stopPropagation();
                       onDeleteReason(reason);
                     }}
-                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-all"
+                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-all p-1 hover:bg-red-50 rounded"
                   >
                     <X size={16} />
                   </button>
                 </div>
               ))}
 
-              {/* Other reason option */}
               <div
                 className={`px-4 py-2 hover:bg-blue-50 cursor-pointer border-t ${
                   selectedReasonIndex === reasonOptions.length + otherReasons.length ? 'bg-blue-50' : ''
@@ -377,9 +360,8 @@ const RecipientRow = ({
           )}
         </div>
 
-        {/* Delete button */}
         <button 
-          className="ml-2 text-red-500 hover:text-red-700 transition-colors p-1 flex-shrink-0"
+          className="ml-2 text-red-500 hover:text-red-700 transition-colors p-2 hover:bg-red-50 rounded-lg flex-shrink-0"
           onClick={() => deleteRecipient(index)}
         >
           <Trash2 size={20} />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import RecipientRow from './RecipientRow';
+import Toast from './Toast';
 import { ArrowLeft, Plus } from 'lucide-react';
 
 const Recipients = () => {
@@ -11,6 +12,7 @@ const Recipients = () => {
   const [users, setUsers] = useState([]);
   const [signatureReasons, setSignatureReasons] = useState([]);
   const [otherReasons, setOtherReasons] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetch('http://localhost:3000/api/data')
@@ -23,25 +25,20 @@ const Recipients = () => {
       .catch(error => console.error('Error fetching data:', error));
   }, []);
 
-  // Different colors for recipient indicators
+  const showToast = (message, type) => {
+    setToast({ show: true, message, type });
+  };
+
   const recipientColors = [
-    '#3B82F6', // blue
-    '#10B981', // green
-    '#F97316', // orange
-    '#8B5CF6', // purple
-    '#EC4899', // pink
-    '#14B8A6', // teal
-    '#EF4444', // red
+    '#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#EF4444',
   ];
 
-  // Update recipient data
   const updateRecipient = (index, newData) => {
     const updatedRecipients = [...recipients];
     updatedRecipients[index] = { ...newData, id: recipients[index].id };
     setRecipients(updatedRecipients);
   };
 
-  // Delete a recipient
   const deleteRecipient = (index) => {
     if (recipients.length > 1) {
       const updatedRecipients = recipients.filter((_, i) => i !== index);
@@ -49,7 +46,6 @@ const Recipients = () => {
     }
   };
 
-  // Delete a custom reason
   const deleteReason = async (reason) => {
     try {
       const response = await fetch(`http://localhost:3000/api/reasons/${encodeURIComponent(reason)}`, {
@@ -58,23 +54,21 @@ const Recipients = () => {
 
       if (response.ok) {
         setOtherReasons(prev => prev.filter(r => r !== reason));
-        // Update any recipients that were using this reason
         setRecipients(prev => prev.map(recipient => 
           recipient.reason === reason ? { ...recipient, reason: '' } : recipient
         ));
+        showToast('Successfully deleted the reason', 'success');
       }
     } catch (error) {
-      console.error('Failed to delete reason:', error);
+      showToast('Failed to delete the reason', 'error');
     }
   };
 
-  // Add a new recipient
   const addNewRecipient = () => {
     const newId = `recipient-${recipients.length + 1}`;
     setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
   };
 
-  // Handle drag end
   const handleDragEnd = (result) => {
     if (!result.destination) return;
 
@@ -85,37 +79,31 @@ const Recipients = () => {
     setRecipients(items);
   };
 
-  // Handle next button click
   const handleNext = () => {
     console.log('Proceeding with recipients:', recipients);
   };
 
-  // Handle back button click
   const handleBack = () => {
     console.log('Going back');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 pt-14">
-      {/* Header */}
-      <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-14">
+      <header className="bg-white/70 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center justify-between fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center">
           <button 
             onClick={handleBack}
-            className="mr-4 p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="mr-4 p-2 rounded-full hover:bg-black/5 transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
-          <div className="font-bold text-gray-800">Setup the Signature:</div>
+          <h1 className="text-xl font-semibold text-gray-800">Setup the Signature</h1>
         </div>
-        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
       </header>
 
-      {/* Main content */}
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          {/* Sign in order checkbox */}
-          <div className="mb-4 flex items-center">
+      <main className="container mx-auto px-4 py-24 max-w-5xl">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+          <div className="mb-6 flex items-center">
             <input
               type="checkbox"
               id="signInOrder"
@@ -128,7 +116,6 @@ const Recipients = () => {
             </label>
           </div>
 
-          {/* Recipients list - Always wrapped in DragDropContext and Droppable */}
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="recipients">
               {(provided) => (
@@ -150,6 +137,8 @@ const Recipients = () => {
                         onDeleteReason={deleteReason}
                         showOrder={showSignInOrder}
                         colors={recipientColors}
+                        onReasonSaved={() => showToast('New reason successfully saved', 'success')}
+                        onReasonSaveFailed={() => showToast('Failed adding a new reason', 'error')}
                       />
                     ))}
                   </div>
@@ -159,11 +148,10 @@ const Recipients = () => {
             </Droppable>
           </DragDropContext>
 
-          {/* Add new recipient button */}
-          <div className="mt-4">
+          <div className="mt-6">
             <button
               onClick={addNewRecipient}
-              className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md shadow-blue-500/20"
             >
               <Plus size={18} className="mr-2" />
               Add Another Recipient
@@ -171,16 +159,23 @@ const Recipients = () => {
           </div>
         </div>
 
-        {/* Navigation buttons */}
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-6">
           <button
             onClick={handleNext}
-            className="bg-amber-400 hover:bg-amber-500 text-gray-900 px-6 py-2 rounded-lg font-medium transition-colors"
+            className="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-gray-900 px-8 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-amber-400/20"
           >
             Next
           </button>
         </div>
       </main>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 };
