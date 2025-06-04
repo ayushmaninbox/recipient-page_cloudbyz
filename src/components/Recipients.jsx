@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import RecipientRow from './RecipientRow';
 import { ArrowLeft, Plus } from 'lucide-react';
 
@@ -51,6 +52,17 @@ const Recipients = () => {
     setRecipients([...recipients, { name: '', email: '', reason: '' }]);
   };
 
+  // Handle drag end
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const items = Array.from(recipients);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setRecipients(items);
+  };
+
   // Handle next button click
   const handleNext = () => {
     console.log('Proceeding with recipients:', recipients);
@@ -60,6 +72,24 @@ const Recipients = () => {
   const handleBack = () => {
     console.log('Going back');
   };
+
+  const recipientsList = (
+    <div className="space-y-4">
+      {recipients.map((recipient, index) => (
+        <RecipientRow
+          key={`recipient-${index}`}
+          index={index}
+          recipient={recipient}
+          updateRecipient={updateRecipient}
+          deleteRecipient={deleteRecipient}
+          users={users}
+          reasonOptions={signatureReasons}
+          showOrder={showSignInOrder}
+          colors={recipientColors}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 pt-14">
@@ -95,21 +125,23 @@ const Recipients = () => {
           </div>
 
           {/* Recipients list */}
-          <div className="space-y-4">
-            {recipients.map((recipient, index) => (
-              <RecipientRow
-                key={index}
-                index={index}
-                recipient={recipient}
-                updateRecipient={updateRecipient}
-                deleteRecipient={deleteRecipient}
-                users={users}
-                reasonOptions={signatureReasons}
-                showOrder={showSignInOrder}
-                colors={recipientColors}
-              />
-            ))}
-          </div>
+          {showSignInOrder ? (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="recipients">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                  >
+                    {recipientsList}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            recipientsList
+          )}
 
           {/* Add new recipient button */}
           <div className="mt-4">

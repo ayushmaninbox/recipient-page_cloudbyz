@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, ChevronDown, Trash2, GripVertical, FileText } from 'lucide-react';
+import { Draggable } from 'react-beautiful-dnd';
 
 const RecipientRow = ({ 
   index, 
@@ -16,6 +17,7 @@ const RecipientRow = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [isCustomReason, setIsCustomReason] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -44,6 +46,7 @@ const RecipientRow = ({
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
           userInputRef.current && !userInputRef.current.contains(event.target)) {
         setShowUserDropdown(false);
+        setSelectedIndex(-1);
       }
       if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target) && 
           reasonInputRef.current && !reasonInputRef.current.contains(event.target)) {
@@ -55,6 +58,40 @@ const RecipientRow = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (!showUserDropdown || filteredUsers.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < filteredUsers.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0) {
+          handleUserSelect(filteredUsers[selectedIndex]);
+        } else {
+          // Find and select user by name
+          const matchedUser = users.find(
+            user => user.name.toLowerCase() === searchTerm.toLowerCase()
+          );
+          if (matchedUser) {
+            handleUserSelect(matchedUser);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
   // Handle user selection
   const handleUserSelect = (user) => {
     updateRecipient(index, { 
@@ -64,6 +101,7 @@ const RecipientRow = ({
     });
     setShowUserDropdown(false);
     setSearchTerm('');
+    setSelectedIndex(-1);
   };
 
   // Handle reason selection
@@ -83,6 +121,7 @@ const RecipientRow = ({
   const handleUserInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
+    setSelectedIndex(-1);
     updateRecipient(index, { ...recipient, name: value });
   };
 
@@ -99,7 +138,7 @@ const RecipientRow = ({
     updateRecipient(index, { ...recipient, reason: value });
   };
 
-  return (
+  const content = (
     <div className="relative mb-4 bg-white rounded-lg shadow overflow-visible">
       {/* Left color indicator */}
       <div 
@@ -133,6 +172,7 @@ const RecipientRow = ({
               value={searchTerm || recipient.name}
               onChange={handleUserInputChange}
               onFocus={() => setShowUserDropdown(true)}
+              onKeyDown={handleKeyDown}
             />
             <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
           </div>
@@ -147,8 +187,11 @@ const RecipientRow = ({
                 filteredUsers.map((user, i) => (
                   <div
                     key={i}
-                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center"
+                    className={`px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center ${
+                      selectedIndex === i ? 'bg-blue-50' : ''
+                    }`}
                     onClick={() => handleUserSelect(user)}
+                    onMouseEnter={() => setSelectedIndex(i)}
                   >
                     <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
                       {getInitials(user.name)}
@@ -245,6 +288,20 @@ const RecipientRow = ({
       </div>
     </div>
   );
+
+  return showOrder ? (
+    <Draggable draggableId={`recipient-${index}`} index={index}>
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+        >
+          {content}
+        </div>
+      )}
+    </Draggable>
+  ) : content;
 };
 
 export default RecipientRow;
