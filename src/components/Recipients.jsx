@@ -73,24 +73,6 @@ const Recipients = () => {
     console.log('Going back');
   };
 
-  const recipientsList = (
-    <div className="space-y-4">
-      {recipients.map((recipient, index) => (
-        <RecipientRow
-          key={`recipient-${index}`}
-          index={index}
-          recipient={recipient}
-          updateRecipient={updateRecipient}
-          deleteRecipient={deleteRecipient}
-          users={users}
-          reasonOptions={signatureReasons}
-          showOrder={showSignInOrder}
-          colors={recipientColors}
-        />
-      ))}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 pt-14">
       {/* Header */}
@@ -124,24 +106,34 @@ const Recipients = () => {
             </label>
           </div>
 
-          {/* Recipients list */}
-          {showSignInOrder ? (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="recipients">
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    {recipientsList}
-                    {provided.placeholder}
+          {/* Recipients list - Always wrapped in DragDropContext and Droppable */}
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="recipients">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  <div className="space-y-4">
+                    {recipients.map((recipient, index) => (
+                      <RecipientRow
+                        key={`recipient-${index}`}
+                        index={index}
+                        recipient={recipient}
+                        updateRecipient={updateRecipient}
+                        deleteRecipient={deleteRecipient}
+                        users={users}
+                        reasonOptions={signatureReasons}
+                        showOrder={showSignInOrder}
+                        colors={recipientColors}
+                      />
+                    ))}
                   </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          ) : (
-            recipientsList
-          )}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
 
           {/* Add new recipient button */}
           <div className="mt-4">

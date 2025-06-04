@@ -289,19 +289,24 @@ const RecipientRow = ({
     </div>
   );
 
-  return showOrder ? (
-    <Draggable draggableId={`recipient-${index}`} index={index}>
+  // Always wrap in Draggable, but control drag behavior with isDragDisabled
+  return (
+    <Draggable 
+      draggableId={`recipient-${index}`} 
+      index={index}
+      isDragDisabled={!showOrder}
+    >
       {(provided) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          {...provided.dragHandleProps}
+          {...(showOrder ? provided.dragHandleProps : {})}
         >
           {content}
         </div>
       )}
     </Draggable>
-  ) : content;
+  );
 };
 
 export default RecipientRow;
