@@ -1,24 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RecipientRow from './RecipientRow';
 import { ArrowLeft, Plus } from 'lucide-react';
-import appData from '../data/app-data.json';
-
-// Different colors for recipient indicators
-const recipientColors = [
-  '#3B82F6', // blue
-  '#10B981', // green
-  '#F97316', // orange
-  '#8B5CF6', // purple
-  '#EC4899', // pink
-  '#14B8A6', // teal
-  '#EF4444', // red
-];
 
 const Recipients = () => {
   const [showSignInOrder, setShowSignInOrder] = useState(false);
   const [recipients, setRecipients] = useState([
     { name: '', email: '', reason: '' }
   ]);
+  const [users, setUsers] = useState([]);
+  const [signatureReasons, setSignatureReasons] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/data')
+      .then(response => response.json())
+      .then(data => {
+        setUsers(data.users);
+        setSignatureReasons(data.signatureReasons);
+      })
+      .catch(error => console.error('Error fetching data:', error));
+  }, []);
+
+  // Different colors for recipient indicators
+  const recipientColors = [
+    '#3B82F6', // blue
+    '#10B981', // green
+    '#F97316', // orange
+    '#8B5CF6', // purple
+    '#EC4899', // pink
+    '#14B8A6', // teal
+    '#EF4444', // red
+  ];
 
   // Update recipient data
   const updateRecipient = (index, newData) => {
@@ -43,13 +54,11 @@ const Recipients = () => {
   // Handle next button click
   const handleNext = () => {
     console.log('Proceeding with recipients:', recipients);
-    // Add navigation logic here
   };
 
   // Handle back button click
   const handleBack = () => {
     console.log('Going back');
-    // Add navigation logic here
   };
 
   return (
@@ -94,8 +103,8 @@ const Recipients = () => {
                 recipient={recipient}
                 updateRecipient={updateRecipient}
                 deleteRecipient={deleteRecipient}
-                users={appData.users}
-                reasonOptions={appData.signatureReasons}
+                users={users}
+                reasonOptions={signatureReasons}
                 showOrder={showSignInOrder}
                 colors={recipientColors}
               />

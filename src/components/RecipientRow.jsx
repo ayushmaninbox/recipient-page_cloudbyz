@@ -23,7 +23,8 @@ const RecipientRow = ({
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Handle outside click for dropdowns
@@ -87,7 +88,7 @@ const RecipientRow = ({
   const indicatorColor = colors[index % colors.length];
 
   return (
-    <div className="relative mb-4 bg-white rounded-lg shadow overflow-hidden">
+    <div className="relative mb-4 bg-white rounded-lg shadow overflow-visible">
       {/* Left color indicator */}
       <div 
         className="absolute left-0 top-0 bottom-0 w-1.5" 
@@ -129,7 +130,7 @@ const RecipientRow = ({
           {showUserDropdown && (
             <div 
               ref={userDropdownRef} 
-              className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, i) => (
@@ -139,8 +140,10 @@ const RecipientRow = ({
                     onClick={() => handleUserSelect(user)}
                   >
                     <User size={16} className="text-gray-500 mr-2" />
-                    <span className="text-sm font-medium">{user.name}</span>
-                    <span className="text-sm text-gray-500 ml-2">({user.email})</span>
+                    <div>
+                      <span className="text-sm font-medium">{user.name}</span>
+                      <span className="text-sm text-gray-500 ml-2">({user.email})</span>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -182,7 +185,7 @@ const RecipientRow = ({
 
           {/* Reason dropdown */}
           {showReasonDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
               {reasonOptions.map((reason, i) => (
                 <div
                   key={i}
