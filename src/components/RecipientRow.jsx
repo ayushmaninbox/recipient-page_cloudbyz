@@ -14,13 +14,12 @@ const RecipientRow = ({
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
-  const [showCustomReasonModal, setShowCustomReasonModal] = useState(false);
   const [customReason, setCustomReason] = useState('');
-  const [customReasons, setCustomReasons] = useState([]);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
   const reasonDropdownRef = useRef(null);
+  const customReasonInputRef = useRef(null);
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
@@ -82,29 +81,20 @@ const RecipientRow = ({
   // Handle reason selection
   const handleReasonSelect = (reason) => {
     if (reason === 'Other') {
-      setShowCustomReasonModal(true);
+      updateRecipient(index, { ...recipient, reason: '' });
+      if (customReasonInputRef.current) {
+        customReasonInputRef.current.focus();
+      }
     } else {
       updateRecipient(index, { ...recipient, reason });
     }
     setShowReasonDropdown(false);
   };
 
-  // Handle custom reason submission
-  const handleCustomReasonSubmit = () => {
-    if (customReason.trim()) {
-      const newReason = customReason.slice(0, 50);
-      updateRecipient(index, { ...recipient, reason: newReason });
-      if (!customReasons.includes(newReason)) {
-        setCustomReasons([...customReasons, newReason]);
-      }
-    }
-    setShowCustomReasonModal(false);
-    setCustomReason('');
-  };
-
-  // Get all reasons including custom ones
-  const getAllReasons = () => {
-    return [...reasonOptions, ...customReasons.filter(reason => !reasonOptions.includes(reason))];
+  // Handle custom reason change
+  const handleCustomReasonChange = (e) => {
+    const value = e.target.value.slice(0, 25);
+    updateRecipient(index, { ...recipient, reason: value });
   };
 
   return (
@@ -149,7 +139,7 @@ const RecipientRow = ({
           {showUserDropdown && (
             <div 
               ref={userDropdownRef} 
-              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, i) => (
@@ -190,37 +180,57 @@ const RecipientRow = ({
         {/* Reason selection */}
         <div className="relative flex-1 min-w-0">
           <div
-            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer"
-            onClick={() => setShowReasonDropdown(true)}
             ref={reasonDropdownRef}
+            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer"
+            onClick={() => !recipient.reason && setShowReasonDropdown(true)}
           >
-            <input
-              type="text"
-              placeholder={recipient.reason === 'Other' ? 'Type your reason' : 'Select reason to sign'}
-              className="flex-1 outline-none text-sm cursor-pointer min-w-0 truncate"
-              value={recipient.reason}
-              readOnly
-            />
-            <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
+            {recipient.reason === '' ? (
+              <div className="flex items-center w-full">
+                <span className="text-gray-500 text-sm mr-2">Other:</span>
+                <input
+                  ref={customReasonInputRef}
+                  type="text"
+                  value={recipient.reason}
+                  onChange={handleCustomReasonChange}
+                  placeholder="Type your reason"
+                  className="flex-1 outline-none text-sm min-w-0"
+                  maxLength={25}
+                />
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Select reason to sign"
+                  className="flex-1 outline-none text-sm cursor-pointer min-w-0 truncate"
+                  value={recipient.reason}
+                  readOnly
+                  onClick={() => setShowReasonDropdown(true)}
+                />
+                <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
+              </>
+            )}
           </div>
 
           {/* Reason dropdown */}
           {showReasonDropdown && (
-            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
-              {getAllReasons().map((reason, i) => (
+            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
+              <div className="max-h-48 overflow-y-auto">
+                {reasonOptions.filter(reason => reason !== 'Other').map((reason, i) => (
+                  <div
+                    key={i}
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm truncate"
+                    onClick={() => handleReasonSelect(reason)}
+                  >
+                    {reason}
+                  </div>
+                ))}
                 <div
-                  key={i}
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm truncate"
-                  onClick={() => handleReasonSelect(reason)}
+                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-t"
+                  onClick={() => handleReasonSelect('Other')}
                 >
-                  {reason}
+                  Other: Type your reason
                 </div>
-              ))}
-              <div
-                className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm"
-                onClick={() => handleReasonSelect('Other')}
-              >
-                Other
               </div>
             </div>
           )}
@@ -234,45 +244,6 @@ const RecipientRow = ({
           <Trash2 size={20} />
         </button>
       </div>
-
-      {/* Custom reason modal */}
-      {showCustomReasonModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96 max-w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Type your reason</h2>
-              <button 
-                className="text-gray-500 hover:text-gray-700" 
-                onClick={() => {
-                  setShowCustomReasonModal(false);
-                  setCustomReason('');
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Enter your reason (max 50 characters)"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
-                value={customReason}
-                onChange={(e) => setCustomReason(e.target.value.slice(0, 50))}
-                autoFocus
-              />
-              <span className="absolute right-2 bottom-4 text-xs text-gray-500">
-                {customReason.length}/50
-              </span>
-            </div>
-            <button
-              className="w-full bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 transition-colors"
-              onClick={handleCustomReasonSubmit}
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
