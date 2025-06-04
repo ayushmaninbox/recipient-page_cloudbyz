@@ -25,7 +25,6 @@ const Recipients = () => {
       })
       .catch(error => {
         console.error('Error fetching data:', error);
-        // Set default empty arrays in case of error
         setUsers([]);
         setSignatureReasons([]);
         setOtherReasons([]);
@@ -50,24 +49,6 @@ const Recipients = () => {
     if (recipients.length > 1) {
       const updatedRecipients = recipients.filter((_, i) => i !== index);
       setRecipients(updatedRecipients);
-    }
-  };
-
-  const deleteReason = async (reason) => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/reasons/${encodeURIComponent(reason)}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setOtherReasons(prev => prev.filter(r => r !== reason));
-        setRecipients(prev => prev.map(recipient => 
-          recipient.reason === reason ? { ...recipient, reason: '' } : recipient
-        ));
-        showToast('Successfully deleted the reason', 'success');
-      }
-    } catch (error) {
-      showToast('Failed to delete the reason', 'error');
     }
   };
 
@@ -102,7 +83,6 @@ const Recipients = () => {
       return;
     }
 
-    // Save all temp reasons to the backend
     for (const reason of tempReasons) {
       try {
         await fetch('http://localhost:3000/api/reasons', {
@@ -122,7 +102,6 @@ const Recipients = () => {
 
     if (tempReasons.length > 0) {
       showToast('Successfully saved all new reasons', 'success');
-      setTempReasons([]);
     }
 
     console.log('Proceeding with recipients:', recipients);
@@ -179,7 +158,6 @@ const Recipients = () => {
                         users={users}
                         reasonOptions={[...signatureReasons, ...tempReasons]}
                         otherReasons={otherReasons}
-                        onDeleteReason={deleteReason}
                         showOrder={showSignInOrder}
                         colors={recipientColors}
                         onAddTempReason={addTempReason}
