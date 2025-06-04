@@ -14,7 +14,8 @@ const RecipientRow = ({
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
-  const [customReason, setCustomReason] = useState('');
+  const [isCustomReason, setIsCustomReason] = useState(false);
+  const [customReasons, setCustomReasons] = useState([]);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -81,11 +82,13 @@ const RecipientRow = ({
   // Handle reason selection
   const handleReasonSelect = (reason) => {
     if (reason === 'Other') {
+      setIsCustomReason(true);
       updateRecipient(index, { ...recipient, reason: '' });
       if (customReasonInputRef.current) {
         customReasonInputRef.current.focus();
       }
     } else {
+      setIsCustomReason(false);
       updateRecipient(index, { ...recipient, reason });
     }
     setShowReasonDropdown(false);
@@ -96,6 +99,17 @@ const RecipientRow = ({
     const value = e.target.value.slice(0, 25);
     updateRecipient(index, { ...recipient, reason: value });
   };
+
+  // Handle custom reason submission
+  const handleCustomReasonSubmit = () => {
+    if (recipient.reason && !customReasons.includes(recipient.reason)) {
+      setCustomReasons([...customReasons, recipient.reason]);
+    }
+    setIsCustomReason(false);
+  };
+
+  // Combined reason options
+  const allReasonOptions = [...reasonOptions, ...customReasons];
 
   return (
     <div className="relative mb-4 bg-white rounded-lg shadow overflow-visible">
@@ -182,16 +196,16 @@ const RecipientRow = ({
           <div
             ref={reasonDropdownRef}
             className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer"
-            onClick={() => !recipient.reason && setShowReasonDropdown(true)}
+            onClick={() => !isCustomReason && setShowReasonDropdown(true)}
           >
-            {recipient.reason === '' ? (
+            {isCustomReason ? (
               <div className="flex items-center w-full">
-                <span className="text-gray-500 text-sm mr-2">Other:</span>
                 <input
                   ref={customReasonInputRef}
                   type="text"
                   value={recipient.reason}
                   onChange={handleCustomReasonChange}
+                  onBlur={handleCustomReasonSubmit}
                   placeholder="Type your reason"
                   className="flex-1 outline-none text-sm min-w-0"
                   maxLength={25}
@@ -216,7 +230,7 @@ const RecipientRow = ({
           {showReasonDropdown && (
             <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
               <div className="max-h-48 overflow-y-auto">
-                {reasonOptions.filter(reason => reason !== 'Other').map((reason, i) => (
+                {allReasonOptions.map((reason, i) => (
                   <div
                     key={i}
                     className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm truncate"
@@ -229,7 +243,7 @@ const RecipientRow = ({
                   className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-t"
                   onClick={() => handleReasonSelect('Other')}
                 >
-                  Other: Type your reason
+                  Other
                 </div>
               </div>
             </div>
