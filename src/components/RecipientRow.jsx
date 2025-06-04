@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, X, ChevronDown, Trash2, GripVertical } from 'lucide-react';
+import { User, ChevronDown, Trash2, GripVertical } from 'lucide-react';
 
 const RecipientRow = ({ 
   index, 
@@ -7,20 +7,14 @@ const RecipientRow = ({
   updateRecipient, 
   deleteRecipient, 
   users,
-  reasonOptions,
   showOrder,
   colors
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showReasonDropdown, setShowReasonDropdown] = useState(false);
-  const [isCustomReason, setIsCustomReason] = useState(false);
-  const [customReasons, setCustomReasons] = useState([]);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
-  const reasonDropdownRef = useRef(null);
-  const customReasonInputRef = useRef(null);
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
@@ -44,10 +38,6 @@ const RecipientRow = ({
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
           userInputRef.current && !userInputRef.current.contains(event.target)) {
         setShowUserDropdown(false);
-      }
-      
-      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target)) {
-        setShowReasonDropdown(false);
       }
     };
 
@@ -78,47 +68,6 @@ const RecipientRow = ({
     const value = e.target.value;
     updateRecipient(index, { ...recipient, email: value });
   };
-
-  // Handle reason selection
-  const handleReasonSelect = (reason) => {
-    if (reason === 'Other') {
-      setIsCustomReason(true);
-      updateRecipient(index, { ...recipient, reason: '' });
-      setTimeout(() => {
-        if (customReasonInputRef.current) {
-          customReasonInputRef.current.focus();
-        }
-      }, 0);
-    } else {
-      setIsCustomReason(false);
-      updateRecipient(index, { ...recipient, reason });
-      setShowReasonDropdown(false);
-    }
-  };
-
-  // Handle custom reason change
-  const handleCustomReasonChange = (e) => {
-    const value = e.target.value.slice(0, 25);
-    updateRecipient(index, { ...recipient, reason: value });
-  };
-
-  // Handle custom reason submission
-  const handleCustomReasonSubmit = () => {
-    if (recipient.reason && !customReasons.includes(recipient.reason)) {
-      setCustomReasons([...customReasons, recipient.reason]);
-    }
-    setIsCustomReason(false);
-  };
-
-  // Handle custom reason key press
-  const handleCustomReasonKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleCustomReasonSubmit();
-    }
-  };
-
-  // Combined reason options
-  const allReasonOptions = [...reasonOptions, ...customReasons];
 
   return (
     <div className="relative mb-4 bg-white rounded-lg shadow overflow-visible">
@@ -198,61 +147,6 @@ const RecipientRow = ({
               className="flex-1 outline-none text-sm min-w-0 truncate"
             />
           </div>
-        </div>
-
-        {/* Reason selection */}
-        <div className="relative flex-1 min-w-0">
-          <div
-            ref={reasonDropdownRef}
-            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer"
-            onClick={() => !isCustomReason && setShowReasonDropdown(!showReasonDropdown)}
-          >
-            {isCustomReason ? (
-              <div className="flex items-center w-full">
-                <input
-                  ref={customReasonInputRef}
-                  type="text"
-                  value={recipient.reason}
-                  onChange={handleCustomReasonChange}
-                  onBlur={handleCustomReasonSubmit}
-                  onKeyPress={handleCustomReasonKeyPress}
-                  placeholder="Type your reason"
-                  className="flex-1 outline-none text-sm min-w-0"
-                  maxLength={25}
-                />
-              </div>
-            ) : (
-              <>
-                <span className={`flex-1 text-sm ${recipient.reason ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {recipient.reason || 'Select reason to sign'}
-                </span>
-                <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
-              </>
-            )}
-          </div>
-
-          {/* Reason dropdown */}
-          {showReasonDropdown && !isCustomReason && (
-            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-              <div className="max-h-48 overflow-y-auto py-1">
-                {allReasonOptions.map((reason, i) => (
-                  <div
-                    key={i}
-                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm truncate"
-                    onClick={() => handleReasonSelect(reason)}
-                  >
-                    {reason}
-                  </div>
-                ))}
-                <div
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-t"
-                  onClick={() => handleReasonSelect('Other')}
-                >
-                  Other
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Delete button */}
