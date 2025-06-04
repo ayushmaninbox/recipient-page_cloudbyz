@@ -14,14 +14,12 @@ app.use(express.json());
 app.get('/api/data', async (req, res) => {
   try {
     const data = await fs.readFile(join(__dirname, 'src/data/app-data.json'), 'utf8');
-    const otherReasonsData = await fs.readFile(join(__dirname, 'src/data/other-reasons.json'), 'utf8');
     const appData = JSON.parse(data);
-    const { otherReasons } = JSON.parse(otherReasonsData);
     
     res.json({
       ...appData,
       signatureReasons: [...appData.signatureReasons],
-      otherReasons
+      otherReasons: appData.otherReasons || []
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to load data' });
@@ -31,26 +29,23 @@ app.get('/api/data', async (req, res) => {
 app.post('/api/reasons', async (req, res) => {
   try {
     const { reason, addToSignatureReasons } = req.body;
+    const appDataPath = join(__dirname, 'src/data/app-data.json');
+    const appData = JSON.parse(await fs.readFile(appDataPath, 'utf8'));
     
     if (addToSignatureReasons) {
-      const appDataPath = join(__dirname, 'src/data/app-data.json');
-      const appData = JSON.parse(await fs.readFile(appDataPath, 'utf8'));
-      
       if (!appData.signatureReasons.includes(reason)) {
         appData.signatureReasons.push(reason);
-        await fs.writeFile(appDataPath, JSON.stringify(appData, null, 2));
       }
     } else {
-      const otherReasonsPath = join(__dirname, 'src/data/other-reasons.json');
-      const data = await fs.readFile(otherReasonsPath, 'utf8');
-      const { otherReasons } = JSON.parse(data);
-      
-      if (!otherReasons.includes(reason)) {
-        otherReasons.push(reason);
-        await fs.writeFile(otherReasonsPath, JSON.stringify({ otherReasons }, null, 2));
+      if (!appData.otherReasons) {
+        appData.otherReasons = [];
+      }
+      if (!appData.otherReasons.includes(reason)) {
+        appData.otherReasons.push(reason);
       }
     }
     
+    await fs.writeFile(appDataPath, JSON.stringify(appData, null, 2));
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to save reason' });
@@ -60,12 +55,13 @@ app.post('/api/reasons', async (req, res) => {
 app.delete('/api/reasons/:reason', async (req, res) => {
   try {
     const reasonToDelete = decodeURIComponent(req.params.reason);
-    const filePath = join(__dirname, 'src/data/other-reasons.json');
-    const data = await fs.readFile(filePath, 'utf8');
-    const { otherReasons } = JSON.parse(data);
+    const appDataPath = join(__dirname, 'src/data/app-data.json');
+    const appData = JSON.parse(await fs.readFile(appDataPath, 'utf8'));
     
-    const updatedReasons = otherReasons.filter(reason => reason !== reasonToDelete);
-    await fs.writeFile(filePath, JSON.stringify({ otherReasons: updatedReasons }, null, 2));
+    if (appData.otherReasons) {
+      appData.otherReasons = appData.otherReasons.filter(reason => reason !== reasonToDelete);
+      await fs.writeFile(appDataPath, JSON.stringify(appData, null, 2));
+    }
     
     res.json({ success: true });
   } catch (error) {
