@@ -130,7 +130,7 @@ const RecipientRow = ({
         <div className="relative flex-1 min-w-0">
           <div 
             ref={userInputRef}
-            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-CloudbyzBlue focus-within:ring-1 focus-within:ring-CloudbyzBlue"
+            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
             onClick={() => setShowUserDropdown(true)}
           >
             <User size={18} className="text-gray-500 mr-2 flex-shrink-0" />
@@ -155,10 +155,10 @@ const RecipientRow = ({
                 filteredUsers.map((user, i) => (
                   <div
                     key={i}
-                    className="px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer flex items-center"
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center"
                     onClick={() => handleUserSelect(user)}
                   >
-                    <div className="w-8 h-8 rounded-full bg-CloudbyzBlue/10 text-CloudbyzBlue flex items-center justify-center mr-3 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
                       {getInitials(user.name)}
                     </div>
                     <div className="flex flex-col min-w-0">
@@ -176,7 +176,7 @@ const RecipientRow = ({
 
         {/* Email field */}
         <div className="relative flex-1 min-w-0 mx-2">
-          <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-CloudbyzBlue focus-within:ring-1 focus-within:ring-CloudbyzBlue">
+          <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
             <input
               type="email"
               value={recipient.email}
@@ -190,7 +190,7 @@ const RecipientRow = ({
         {/* Reason selection */}
         <div className="relative flex-1 min-w-0">
           <div
-            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer focus-within:border-CloudbyzBlue focus-within:ring-1 focus-within:ring-CloudbyzBlue"
+            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer"
             onClick={() => setShowReasonDropdown(true)}
             ref={reasonDropdownRef}
           >
@@ -210,14 +210,14 @@ const RecipientRow = ({
               {getAllReasons().map((reason, i) => (
                 <div
                   key={i}
-                  className="px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer text-sm truncate"
+                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm truncate"
                   onClick={() => handleReasonSelect(reason)}
                 >
                   {reason}
                 </div>
               ))}
               <div
-                className="px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer text-sm"
+                className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm"
                 onClick={() => handleReasonSelect('Other')}
               >
                 Other
@@ -255,7 +255,7 @@ const RecipientRow = ({
               <input
                 type="text"
                 placeholder="Enter your reason (max 50 characters)"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2 focus:border-CloudbyzBlue focus:ring-1 focus:ring-CloudbyzBlue"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value.slice(0, 50))}
                 autoFocus
@@ -265,7 +265,7 @@ const RecipientRow = ({
               </span>
             </div>
             <button
-              className="w-full bg-CloudbyzBlue text-white rounded-lg px-4 py-2 hover:bg-CloudbyzBlue/90 transition-colors"
+              className="w-full bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 transition-colors"
               onClick={handleCustomReasonSubmit}
             >
               Confirm

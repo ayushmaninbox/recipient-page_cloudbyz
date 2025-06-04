@@ -22,7 +22,7 @@ const Recipients = () => {
 
   // Different colors for recipient indicators
   const recipientColors = [
-    '#009edb', // CloudbyzBlue
+    '#3B82F6', // blue
     '#10B981', // green
     '#F97316', // orange
     '#8B5CF6', // purple
@@ -62,7 +62,7 @@ const Recipients = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-CloudbyzBlue/10 to-CloudbyzBlue/20 pt-14">
+    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 pt-14">
       {/* Header */}
       <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
@@ -87,7 +87,7 @@ const Recipients = () => {
               id="signInOrder"
               checked={showSignInOrder}
               onChange={() => setShowSignInOrder(!showSignInOrder)}
-              className="rounded border-gray-300 text-CloudbyzBlue focus:ring-CloudbyzBlue"
+              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
             />
             <label htmlFor="signInOrder" className="ml-2 text-sm font-medium text-gray-700">
               Sign in order?
@@ -115,7 +115,7 @@ const Recipients = () => {
           <div className="mt-4">
             <button
               onClick={addNewRecipient}
-              className="flex items-center bg-CloudbyzBlue hover:bg-CloudbyzBlue/90 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
               <Plus size={18} className="mr-2" />
               Add Another Recipient
