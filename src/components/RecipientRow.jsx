@@ -17,7 +17,8 @@ const RecipientRow = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [isCustomReason, setIsCustomReason] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [selectedUserIndex, setSelectedUserIndex] = useState(-1);
+  const [selectedReasonIndex, setSelectedReasonIndex] = useState(-1);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -46,11 +47,12 @@ const RecipientRow = ({
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
           userInputRef.current && !userInputRef.current.contains(event.target)) {
         setShowUserDropdown(false);
-        setSelectedIndex(-1);
+        setSelectedUserIndex(-1);
       }
       if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target) && 
           reasonInputRef.current && !reasonInputRef.current.contains(event.target)) {
         setShowReasonDropdown(false);
+        setSelectedReasonIndex(-1);
       }
     };
 
@@ -58,32 +60,69 @@ const RecipientRow = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle keyboard navigation
-  const handleKeyDown = (e) => {
+  // Handle user keyboard navigation
+  const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedUserIndex(prev => 
           prev < filteredUsers.length - 1 ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : prev);
+        setSelectedUserIndex(prev => prev > 0 ? prev - 1 : prev);
         break;
       case 'Enter':
         e.preventDefault();
-        if (selectedIndex >= 0) {
-          handleUserSelect(filteredUsers[selectedIndex]);
+        if (selectedUserIndex >= 0) {
+          handleUserSelect(filteredUsers[selectedUserIndex]);
         } else {
-          // Find and select user by name
           const matchedUser = users.find(
             user => user.name.toLowerCase() === searchTerm.toLowerCase()
           );
           if (matchedUser) {
             handleUserSelect(matchedUser);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Handle reason keyboard navigation
+  const handleReasonKeyDown = (e) => {
+    if (isCustomReason) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSaveCustomReason();
+      }
+      return;
+    }
+
+    if (!showReasonDropdown || reasonOptions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedReasonIndex(prev => 
+          prev < reasonOptions.length ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedReasonIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedReasonIndex >= 0) {
+          if (selectedReasonIndex === reasonOptions.length) {
+            handleReasonSelect('Other');
+          } else {
+            handleReasonSelect(reasonOptions[selectedReasonIndex]);
           }
         }
         break;
@@ -101,7 +140,7 @@ const RecipientRow = ({
     });
     setShowUserDropdown(false);
     setSearchTerm('');
-    setSelectedIndex(-1);
+    setSelectedUserIndex(-1);
   };
 
   // Handle reason selection
@@ -115,13 +154,36 @@ const RecipientRow = ({
       updateRecipient(index, { ...recipient, reason });
     }
     setShowReasonDropdown(false);
+    setSelectedReasonIndex(-1);
+  };
+
+  // Handle saving custom reason
+  const handleSaveCustomReason = async () => {
+    if (customReason.trim()) {
+      try {
+        const response = await fetch('http://localhost:3000/api/reasons', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ reason: customReason.trim() }),
+        });
+        
+        if (response.ok) {
+          updateRecipient(index, { ...recipient, reason: customReason.trim() });
+          setIsCustomReason(false);
+        }
+      } catch (error) {
+        console.error('Failed to save custom reason:', error);
+      }
+    }
   };
 
   // Handle user input change
   const handleUserInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    setSelectedIndex(-1);
+    setSelectedUserIndex(-1);
     updateRecipient(index, { ...recipient, name: value });
   };
 
@@ -172,7 +234,7 @@ const RecipientRow = ({
               value={searchTerm || recipient.name}
               onChange={handleUserInputChange}
               onFocus={() => setShowUserDropdown(true)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleUserKeyDown}
             />
             <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
           </div>
@@ -188,10 +250,10 @@ const RecipientRow = ({
                   <div
                     key={i}
                     className={`px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center ${
-                      selectedIndex === i ? 'bg-blue-50' : ''
+                      selectedUserIndex === i ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => handleUserSelect(user)}
-                    onMouseEnter={() => setSelectedIndex(i)}
+                    onMouseEnter={() => setSelectedUserIndex(i)}
                   >
                     <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
                       {getInitials(user.name)}
@@ -237,6 +299,7 @@ const RecipientRow = ({
                 className="flex-1 outline-none text-sm min-w-0 truncate"
                 value={customReason}
                 onChange={handleCustomReasonChange}
+                onKeyDown={handleReasonKeyDown}
               />
             ) : (
               <>
@@ -247,6 +310,7 @@ const RecipientRow = ({
                   value={recipient.reason}
                   readOnly
                   onClick={() => setShowReasonDropdown(true)}
+                  onKeyDown={handleReasonKeyDown}
                 />
                 <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
               </>
@@ -262,15 +326,21 @@ const RecipientRow = ({
               {reasonOptions.map((reason, i) => (
                 <div
                   key={i}
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                  className={`px-4 py-2 hover:bg-blue-50 cursor-pointer ${
+                    selectedReasonIndex === i ? 'bg-blue-50' : ''
+                  }`}
                   onClick={() => handleReasonSelect(reason)}
+                  onMouseEnter={() => setSelectedReasonIndex(i)}
                 >
                   <span className="text-sm">{reason}</span>
                 </div>
               ))}
               <div
-                className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-t"
+                className={`px-4 py-2 hover:bg-blue-50 cursor-pointer border-t ${
+                  selectedReasonIndex === reasonOptions.length ? 'bg-blue-50' : ''
+                }`}
                 onClick={() => handleReasonSelect('Other')}
+                onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length)}
               >
                 <span className="text-sm font-medium text-blue-600">Other reason...</span>
               </div>
