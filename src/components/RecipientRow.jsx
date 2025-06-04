@@ -7,14 +7,17 @@ const RecipientRow = ({
   updateRecipient, 
   deleteRecipient, 
   users,
+  reasonOptions,
   showOrder,
   colors
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showReasonDropdown, setShowReasonDropdown] = useState(false);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
+  const reasonDropdownRef = useRef(null);
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
@@ -38,6 +41,9 @@ const RecipientRow = ({
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
           userInputRef.current && !userInputRef.current.contains(event.target)) {
         setShowUserDropdown(false);
+      }
+      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target)) {
+        setShowReasonDropdown(false);
       }
     };
 
@@ -67,6 +73,12 @@ const RecipientRow = ({
   const handleEmailChange = (e) => {
     const value = e.target.value;
     updateRecipient(index, { ...recipient, email: value });
+  };
+
+  // Handle reason selection
+  const handleReasonSelect = (reason) => {
+    updateRecipient(index, { ...recipient, reason });
+    setShowReasonDropdown(false);
   };
 
   return (
@@ -147,6 +159,41 @@ const RecipientRow = ({
               className="flex-1 outline-none text-sm min-w-0 truncate"
             />
           </div>
+        </div>
+
+        {/* Reason selection */}
+        <div className="relative flex-1 min-w-0">
+          <div
+            ref={reasonDropdownRef}
+            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer"
+            onClick={() => setShowReasonDropdown(!showReasonDropdown)}
+          >
+            <input
+              type="text"
+              placeholder="Select reason to sign"
+              className="flex-1 outline-none text-sm cursor-pointer min-w-0 truncate"
+              value={recipient.reason}
+              readOnly
+            />
+            <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
+          </div>
+
+          {/* Reason dropdown */}
+          {showReasonDropdown && (
+            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+              <div className="max-h-48 overflow-y-auto py-1">
+                {reasonOptions.map((reason, i) => (
+                  <div
+                    key={i}
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm truncate"
+                    onClick={() => handleReasonSelect(reason)}
+                  >
+                    {reason}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Delete button */}
