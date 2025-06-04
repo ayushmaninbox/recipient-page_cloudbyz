@@ -289,10 +289,9 @@ const RecipientRow = ({
     </div>
   );
 
-  // Always wrap in Draggable, but control drag behavior with isDragDisabled
   return (
     <Draggable 
-      draggableId={`recipient-${index}`} 
+      draggableId={recipient.id}
       index={index}
       isDragDisabled={!showOrder}
     >

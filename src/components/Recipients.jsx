@@ -6,7 +6,7 @@ import { ArrowLeft, Plus } from 'lucide-react';
 const Recipients = () => {
   const [showSignInOrder, setShowSignInOrder] = useState(false);
   const [recipients, setRecipients] = useState([
-    { name: '', email: '', reason: '' }
+    { id: 'recipient-1', name: '', email: '', reason: '' }
   ]);
   const [users, setUsers] = useState([]);
   const [signatureReasons, setSignatureReasons] = useState([]);
@@ -35,7 +35,7 @@ const Recipients = () => {
   // Update recipient data
   const updateRecipient = (index, newData) => {
     const updatedRecipients = [...recipients];
-    updatedRecipients[index] = newData;
+    updatedRecipients[index] = { ...newData, id: recipients[index].id };
     setRecipients(updatedRecipients);
   };
 
@@ -49,7 +49,8 @@ const Recipients = () => {
 
   // Add a new recipient
   const addNewRecipient = () => {
-    setRecipients([...recipients, { name: '', email: '', reason: '' }]);
+    const newId = `recipient-${recipients.length + 1}`;
+    setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
   };
 
   // Handle drag end
@@ -117,7 +118,7 @@ const Recipients = () => {
                   <div className="space-y-4">
                     {recipients.map((recipient, index) => (
                       <RecipientRow
-                        key={`recipient-${index}`}
+                        key={recipient.id}
                         index={index}
                         recipient={recipient}
                         updateRecipient={updateRecipient}
