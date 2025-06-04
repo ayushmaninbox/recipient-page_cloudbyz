@@ -46,15 +46,14 @@ const RecipientRow = ({
         setShowUserDropdown(false);
       }
       
-      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target) &&
-          !isCustomReason) {
+      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target)) {
         setShowReasonDropdown(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isCustomReason]);
+  }, []);
 
   // Handle user selection
   const handleUserSelect = (user) => {
