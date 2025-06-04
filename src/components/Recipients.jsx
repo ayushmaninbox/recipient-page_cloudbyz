@@ -89,7 +89,7 @@ const Recipients = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-14">
-      <header className="bg-white/70 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center justify-between fixed top-14 left-0 right-0 z-[60]">
+      <header className="bg-white/70 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center justify-between fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center">
           <button 
             onClick={handleBack}
