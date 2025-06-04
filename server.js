@@ -20,7 +20,8 @@ app.get('/api/data', async (req, res) => {
     
     res.json({
       ...appData,
-      signatureReasons: [...appData.signatureReasons, ...otherReasons]
+      signatureReasons: [...appData.signatureReasons],
+      otherReasons
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to load data' });
@@ -42,6 +43,22 @@ app.post('/api/reasons', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to save reason' });
+  }
+});
+
+app.delete('/api/reasons/:reason', async (req, res) => {
+  try {
+    const reasonToDelete = decodeURIComponent(req.params.reason);
+    const filePath = join(__dirname, 'src/data/other-reasons.json');
+    const data = await fs.readFile(filePath, 'utf8');
+    const { otherReasons } = JSON.parse(data);
+    
+    const updatedReasons = otherReasons.filter(reason => reason !== reasonToDelete);
+    await fs.writeFile(filePath, JSON.stringify({ otherReasons: updatedReasons }, null, 2));
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete reason' });
   }
 });
 

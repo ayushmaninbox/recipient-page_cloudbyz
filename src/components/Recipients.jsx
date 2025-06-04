@@ -10,6 +10,7 @@ const Recipients = () => {
   ]);
   const [users, setUsers] = useState([]);
   const [signatureReasons, setSignatureReasons] = useState([]);
+  const [otherReasons, setOtherReasons] = useState([]);
 
   useEffect(() => {
     fetch('http://localhost:3000/api/data')
@@ -17,6 +18,7 @@ const Recipients = () => {
       .then(data => {
         setUsers(data.users);
         setSignatureReasons(data.signatureReasons);
+        setOtherReasons(data.otherReasons);
       })
       .catch(error => console.error('Error fetching data:', error));
   }, []);
@@ -44,6 +46,25 @@ const Recipients = () => {
     if (recipients.length > 1) {
       const updatedRecipients = recipients.filter((_, i) => i !== index);
       setRecipients(updatedRecipients);
+    }
+  };
+
+  // Delete a custom reason
+  const deleteReason = async (reason) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/reasons/${encodeURIComponent(reason)}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setOtherReasons(prev => prev.filter(r => r !== reason));
+        // Update any recipients that were using this reason
+        setRecipients(prev => prev.map(recipient => 
+          recipient.reason === reason ? { ...recipient, reason: '' } : recipient
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to delete reason:', error);
     }
   };
 
@@ -125,6 +146,8 @@ const Recipients = () => {
                         deleteRecipient={deleteRecipient}
                         users={users}
                         reasonOptions={signatureReasons}
+                        otherReasons={otherReasons}
+                        onDeleteReason={deleteReason}
                         showOrder={showSignInOrder}
                         colors={recipientColors}
                       />

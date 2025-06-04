@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, ChevronDown, Trash2, GripVertical, FileText } from 'lucide-react';
+import { User, ChevronDown, Trash2, GripVertical, FileText, X } from 'lucide-react';
 import { Draggable } from 'react-beautiful-dnd';
 
 const RecipientRow = ({ 
@@ -10,7 +10,9 @@ const RecipientRow = ({
   users,
   showOrder,
   colors,
-  reasonOptions
+  reasonOptions,
+  otherReasons,
+  onDeleteReason
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
@@ -109,7 +111,7 @@ const RecipientRow = ({
       case 'ArrowDown':
         e.preventDefault();
         setSelectedReasonIndex(prev => 
-          prev < reasonOptions.length ? prev + 1 : prev
+          prev < reasonOptions.length + otherReasons.length ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
@@ -119,10 +121,11 @@ const RecipientRow = ({
       case 'Enter':
         e.preventDefault();
         if (selectedReasonIndex >= 0) {
-          if (selectedReasonIndex === reasonOptions.length) {
+          if (selectedReasonIndex === reasonOptions.length + otherReasons.length) {
             handleReasonSelect('Other');
           } else {
-            handleReasonSelect(reasonOptions[selectedReasonIndex]);
+            const allReasons = [...reasonOptions, ...otherReasons];
+            handleReasonSelect(allReasons[selectedReasonIndex]);
           }
         }
         break;
@@ -323,6 +326,7 @@ const RecipientRow = ({
               ref={reasonDropdownRef} 
               className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
             >
+              {/* Default reasons */}
               {reasonOptions.map((reason, i) => (
                 <div
                   key={i}
@@ -335,12 +339,37 @@ const RecipientRow = ({
                   <span className="text-sm">{reason}</span>
                 </div>
               ))}
+
+              {/* Custom reasons */}
+              {otherReasons.map((reason, i) => (
+                <div
+                  key={`custom-${i}`}
+                  className={`px-4 py-2 hover:bg-blue-50 cursor-pointer group flex items-center justify-between ${
+                    selectedReasonIndex === reasonOptions.length + i ? 'bg-blue-50' : ''
+                  }`}
+                  onClick={() => handleReasonSelect(reason)}
+                  onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length + i)}
+                >
+                  <span className="text-sm">{reason}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteReason(reason);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-all"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+
+              {/* Other reason option */}
               <div
                 className={`px-4 py-2 hover:bg-blue-50 cursor-pointer border-t ${
-                  selectedReasonIndex === reasonOptions.length ? 'bg-blue-50' : ''
+                  selectedReasonIndex === reasonOptions.length + otherReasons.length ? 'bg-blue-50' : ''
                 }`}
                 onClick={() => handleReasonSelect('Other')}
-                onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length)}
+                onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length + otherReasons.length)}
               >
                 <span className="text-sm font-medium text-blue-600">Other reason...</span>
               </div>
