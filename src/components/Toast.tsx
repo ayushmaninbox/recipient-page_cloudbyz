@@ -23,7 +23,7 @@ const Toast = ({ message, type, onClose }: ToastProps) => {
         initial={{ opacity: 0, y: 50, scale: 0.3 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-        className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+        className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg z-[100] ${
           type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
         }`}
       >
