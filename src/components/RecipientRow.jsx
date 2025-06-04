@@ -29,6 +29,7 @@ const RecipientRow = ({
   const reasonInputRef = useRef(null);
   const reasonDropdownRef = useRef(null);
   const selectedUserRef = useRef(null);
+  const selectedReasonRef = useRef(null);
 
   const filteredUsers = users
     .filter(user => 
@@ -76,6 +77,19 @@ const RecipientRow = ({
       }
     }
   }, [selectedUserIndex]);
+
+  useEffect(() => {
+    if (selectedReasonRef.current && reasonDropdownRef.current) {
+      const dropdownRect = reasonDropdownRef.current.getBoundingClientRect();
+      const selectedRect = selectedReasonRef.current.getBoundingClientRect();
+      
+      if (selectedRect.bottom > dropdownRect.bottom) {
+        reasonDropdownRef.current.scrollTop += selectedRect.bottom - dropdownRect.bottom;
+      } else if (selectedRect.top < dropdownRect.top) {
+        reasonDropdownRef.current.scrollTop -= dropdownRect.top - selectedRect.top;
+      }
+    }
+  }, [selectedReasonIndex]);
 
   const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
@@ -179,7 +193,10 @@ const RecipientRow = ({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ reason: customReason.trim() }),
+          body: JSON.stringify({ 
+            reason: customReason.trim(),
+            addToSignatureReasons: true
+          }),
         });
         
         if (response.ok) {
@@ -332,6 +349,7 @@ const RecipientRow = ({
               {reasonOptions.map((reason, i) => (
                 <div
                   key={i}
+                  ref={selectedReasonIndex === i ? selectedReasonRef : null}
                   className={`px-4 py-2 hover:bg-blue-50 cursor-pointer ${
                     selectedReasonIndex === i ? 'bg-blue-50' : ''
                   }`}
@@ -345,6 +363,7 @@ const RecipientRow = ({
               {otherReasons.map((reason, i) => (
                 <div
                   key={`custom-${i}`}
+                  ref={selectedReasonIndex === reasonOptions.length + i ? selectedReasonRef : null}
                   className={`px-4 py-2 hover:bg-blue-50 cursor-pointer group flex items-center justify-between ${
                     selectedReasonIndex === reasonOptions.length + i ? 'bg-blue-50' : ''
                   }`}
@@ -365,6 +384,7 @@ const RecipientRow = ({
               ))}
 
               <div
+                ref={selectedReasonIndex === reasonOptions.length + otherReasons.length ? selectedReasonRef : null}
                 className={`px-4 py-2 hover:bg-blue-50 cursor-pointer border-t ${
                   selectedReasonIndex === reasonOptions.length + otherReasons.length ? 'bg-blue-50' : ''
                 }`}

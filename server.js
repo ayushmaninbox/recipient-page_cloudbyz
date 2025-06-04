@@ -30,14 +30,25 @@ app.get('/api/data', async (req, res) => {
 
 app.post('/api/reasons', async (req, res) => {
   try {
-    const { reason } = req.body;
-    const filePath = join(__dirname, 'src/data/other-reasons.json');
-    const data = await fs.readFile(filePath, 'utf8');
-    const { otherReasons } = JSON.parse(data);
+    const { reason, addToSignatureReasons } = req.body;
     
-    if (!otherReasons.includes(reason)) {
-      otherReasons.push(reason);
-      await fs.writeFile(filePath, JSON.stringify({ otherReasons }, null, 2));
+    if (addToSignatureReasons) {
+      const appDataPath = join(__dirname, 'src/data/app-data.json');
+      const appData = JSON.parse(await fs.readFile(appDataPath, 'utf8'));
+      
+      if (!appData.signatureReasons.includes(reason)) {
+        appData.signatureReasons.push(reason);
+        await fs.writeFile(appDataPath, JSON.stringify(appData, null, 2));
+      }
+    } else {
+      const otherReasonsPath = join(__dirname, 'src/data/other-reasons.json');
+      const data = await fs.readFile(otherReasonsPath, 'utf8');
+      const { otherReasons } = JSON.parse(data);
+      
+      if (!otherReasons.includes(reason)) {
+        otherReasons.push(reason);
+        await fs.writeFile(otherReasonsPath, JSON.stringify({ otherReasons }, null, 2));
+      }
     }
     
     res.json({ success: true });
