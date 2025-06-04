@@ -1,27 +1,7 @@
 import React, { useState } from 'react';
 import RecipientRow from './RecipientRow';
 import { ArrowLeft, Plus } from 'lucide-react';
-
-// Sample user data for demonstration
-const sampleUsers = [
-  { name: 'John Doe', email: 'john.doe@example.com' },
-  { name: 'Jane Doe', email: 'jane.doe@example.com' },
-  { name: 'Adam Smith', email: 'adam@gmail.com' },
-  { name: 'Charlie Brown', email: 'charlie.b@example.com' },
-  { name: 'Charlie Brown', email: 'charlie.brown2@different.com' }, // Same name, different email
-  { name: 'Emma Watson', email: 'emma@example.com' },
-  { name: 'Michael Johnson', email: 'michael@example.com' },
-];
-
-// Predefined reason options
-const reasonOptions = [
-  'Approval',
-  'Review',
-  'Signature Required',
-  'For Information',
-  'Legal Requirement',
-  'Other'
-];
+import appData from '../data/app-data.json';
 
 // Different colors for recipient indicators
 const recipientColors = [
@@ -73,7 +53,7 @@ const Recipients = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200">
+    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 pt-14">
       {/* Header */}
       <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
@@ -114,8 +94,8 @@ const Recipients = () => {
                 recipient={recipient}
                 updateRecipient={updateRecipient}
                 deleteRecipient={deleteRecipient}
-                users={sampleUsers}
-                reasonOptions={reasonOptions}
+                users={appData.users}
+                reasonOptions={appData.signatureReasons}
                 showOrder={showSignInOrder}
                 colors={recipientColors}
               />

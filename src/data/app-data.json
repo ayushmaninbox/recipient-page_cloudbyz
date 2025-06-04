@@ -1,0 +1,26 @@
+{
+  "users": [
+    { "name": "John Smith", "email": "john.smith@cloudbyz.com" },
+    { "name": "Emma Davis", "email": "emma.davis@cloudbyz.com" },
+    { "name": "Michael Johnson", "email": "michael.johnson@cloudbyz.com" },
+    { "name": "Sarah Wilson", "email": "sarah.wilson@cloudbyz.com" },
+    { "name": "David Brown", "email": "david.brown@cloudbyz.com" },
+    { "name": "Lisa Anderson", "email": "lisa.anderson@cloudbyz.com" },
+    { "name": "James Taylor", "email": "james.taylor@cloudbyz.com" },
+    { "name": "Emily White", "email": "emily.white@cloudbyz.com" },
+    { "name": "Robert Martin", "email": "robert.martin@cloudbyz.com" },
+    { "name": "Jennifer Clark", "email": "jennifer.clark@cloudbyz.com" }
+  ],
+  "signatureReasons": [
+    "I approve this document",
+    "I have reviewed this document",
+    "I am the author of this document",
+    "I have signed this document",
+    "I acknowledge receipt of this document",
+    "I confirm the accuracy of this document",
+    "I validate the content of this document",
+    "I certify this document",
+    "I consent to this document",
+    "Other"
+  ]
+}
