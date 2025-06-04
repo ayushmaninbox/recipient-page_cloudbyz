@@ -1,5 +1,5 @@
 import React from 'react';
-import Recipients from './components/Recipients';
+import Recipients from './components/Recipients.jsx';
 import Navbar from './components/Navbar';
 
 function App() {
