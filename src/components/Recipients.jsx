@@ -19,11 +19,16 @@ const Recipients = () => {
     fetch('http://localhost:3000/api/data')
       .then(response => response.json())
       .then(data => {
-        setUsers(data.users);
-        setSignatureReasons(data.signatureReasons);
-        setOtherReasons(data.otherReasons);
+        setUsers(data.users || []);
+        setSignatureReasons(data.signatureReasons || []);
+        setOtherReasons(data.otherReasons || []);
       })
-      .catch(error => console.error('Error fetching data:', error));
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        setUsers([]);
+        setSignatureReasons([]);
+        setOtherReasons([]);
+      });
   }, []);
 
   const showToast = (message, type) => {
@@ -171,8 +176,8 @@ const Recipients = () => {
                         updateRecipient={updateRecipient}
                         deleteRecipient={deleteRecipient}
                         users={users}
-                        reasonOptions={[...signatureReasons, ...tempReasons]}
-                        otherReasons={otherReasons}
+                        reasonOptions={[...(signatureReasons || []), ...(tempReasons || [])]}
+                        otherReasons={otherReasons || []}
                         onDeleteReason={deleteReason}
                         showOrder={showSignInOrder}
                         colors={recipientColors}
