@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, ChevronDown, Trash2, GripVertical } from 'lucide-react';
+import { User, ChevronDown, Trash2, GripVertical, FileText } from 'lucide-react';
 
 const RecipientRow = ({ 
   index, 
@@ -8,13 +8,19 @@ const RecipientRow = ({
   deleteRecipient, 
   users,
   showOrder,
-  colors
+  colors,
+  reasonOptions
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showReasonDropdown, setShowReasonDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [customReason, setCustomReason] = useState('');
+  const [isCustomReason, setIsCustomReason] = useState(false);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
+  const reasonInputRef = useRef(null);
+  const reasonDropdownRef = useRef(null);
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
@@ -39,6 +45,10 @@ const RecipientRow = ({
           userInputRef.current && !userInputRef.current.contains(event.target)) {
         setShowUserDropdown(false);
       }
+      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target) && 
+          reasonInputRef.current && !reasonInputRef.current.contains(event.target)) {
+        setShowReasonDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -56,6 +66,19 @@ const RecipientRow = ({
     setSearchTerm('');
   };
 
+  // Handle reason selection
+  const handleReasonSelect = (reason) => {
+    if (reason === 'Other') {
+      setIsCustomReason(true);
+      setCustomReason('');
+      updateRecipient(index, { ...recipient, reason: '' });
+    } else {
+      setIsCustomReason(false);
+      updateRecipient(index, { ...recipient, reason });
+    }
+    setShowReasonDropdown(false);
+  };
+
   // Handle user input change
   const handleUserInputChange = (e) => {
     const value = e.target.value;
@@ -67,6 +90,13 @@ const RecipientRow = ({
   const handleEmailChange = (e) => {
     const value = e.target.value;
     updateRecipient(index, { ...recipient, email: value });
+  };
+
+  // Handle custom reason change
+  const handleCustomReasonChange = (e) => {
+    const value = e.target.value;
+    setCustomReason(value);
+    updateRecipient(index, { ...recipient, reason: value });
   };
 
   return (
@@ -147,6 +177,62 @@ const RecipientRow = ({
               className="flex-1 outline-none text-sm min-w-0 truncate"
             />
           </div>
+        </div>
+
+        {/* Reason selection */}
+        <div className="relative flex-1 min-w-0">
+          <div 
+            ref={reasonInputRef}
+            className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+            onClick={() => !isCustomReason && setShowReasonDropdown(true)}
+          >
+            <FileText size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+            {isCustomReason ? (
+              <input
+                type="text"
+                placeholder="Enter custom reason"
+                className="flex-1 outline-none text-sm min-w-0 truncate"
+                value={customReason}
+                onChange={handleCustomReasonChange}
+              />
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Select reason to sign"
+                  className="flex-1 outline-none text-sm min-w-0 truncate cursor-pointer"
+                  value={recipient.reason}
+                  readOnly
+                  onClick={() => setShowReasonDropdown(true)}
+                />
+                <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
+              </>
+            )}
+          </div>
+
+          {/* Reason dropdown */}
+          {showReasonDropdown && !isCustomReason && (
+            <div 
+              ref={reasonDropdownRef} 
+              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+            >
+              {reasonOptions.map((reason, i) => (
+                <div
+                  key={i}
+                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                  onClick={() => handleReasonSelect(reason)}
+                >
+                  <span className="text-sm">{reason}</span>
+                </div>
+              ))}
+              <div
+                className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-t"
+                onClick={() => handleReasonSelect('Other')}
+              >
+                <span className="text-sm font-medium text-blue-600">Other reason...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Delete button */}
