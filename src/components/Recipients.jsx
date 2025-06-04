@@ -47,24 +47,6 @@ const Recipients = () => {
     }
   };
 
-  const deleteReason = async (reason) => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/reasons/${encodeURIComponent(reason)}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setOtherReasons(prev => prev.filter(r => r !== reason));
-        setRecipients(prev => prev.map(recipient => 
-          recipient.reason === reason ? { ...recipient, reason: '' } : recipient
-        ));
-        showToast('Successfully deleted the reason', 'success');
-      }
-    } catch (error) {
-      showToast('Failed to delete the reason', 'error');
-    }
-  };
-
   const addNewRecipient = () => {
     const newId = `recipient-${recipients.length + 1}`;
     setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
@@ -116,7 +98,6 @@ const Recipients = () => {
 
     if (tempReasons.length > 0) {
       showToast('Successfully saved all new reasons', 'success');
-      setTempReasons([]);
     }
 
     console.log('Proceeding with recipients:', recipients);
@@ -173,7 +154,6 @@ const Recipients = () => {
                         users={users}
                         reasonOptions={[...signatureReasons, ...tempReasons]}
                         otherReasons={otherReasons}
-                        onDeleteReason={deleteReason}
                         showOrder={showSignInOrder}
                         colors={recipientColors}
                         onAddTempReason={addTempReason}

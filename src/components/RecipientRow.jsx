@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, ChevronDown, Trash2, GripVertical, FileText, X, Mail } from 'lucide-react';
+import { User, ChevronDown, Trash2, GripVertical, FileText, Mail } from 'lucide-react';
 import { Draggable } from 'react-beautiful-dnd';
 
 const RecipientRow = ({ 
@@ -12,7 +12,6 @@ const RecipientRow = ({
   colors,
   reasonOptions,
   otherReasons,
-  onDeleteReason,
   onAddTempReason
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -57,12 +56,15 @@ const RecipientRow = ({
           reasonInputRef.current && !reasonInputRef.current.contains(event.target)) {
         setShowReasonDropdown(false);
         setSelectedReasonIndex(-1);
+        if (isCustomReason && customReason.trim()) {
+          handleSaveCustomReason();
+        }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isCustomReason, customReason]);
 
   useEffect(() => {
     if (selectedUserRef.current && userDropdownRef.current) {
@@ -348,22 +350,13 @@ const RecipientRow = ({
                 <div
                   key={`custom-${i}`}
                   ref={selectedReasonIndex === reasonOptions.length + i ? selectedReasonRef : null}
-                  className={`px-4 py-2 hover:bg-blue-50 cursor-pointer group flex items-center justify-between ${
+                  className={`px-4 py-2 hover:bg-blue-50 cursor-pointer ${
                     selectedReasonIndex === reasonOptions.length + i ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleReasonSelect(reason)}
                   onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length + i)}
                 >
                   <span className="text-sm">{reason}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteReason(reason);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-all p-1 hover:bg-red-50 rounded"
-                  >
-                    <X size={16} />
-                  </button>
                 </div>
               ))}
 
