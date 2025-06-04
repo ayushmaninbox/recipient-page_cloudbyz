@@ -21,6 +21,7 @@ const RecipientRow = ({
   const [isCustomReason, setIsCustomReason] = useState(false);
   const [selectedUserIndex, setSelectedUserIndex] = useState(-1);
   const [selectedReasonIndex, setSelectedReasonIndex] = useState(-1);
+  const [tempInputValue, setTempInputValue] = useState('');
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -56,7 +57,7 @@ const RecipientRow = ({
           reasonInputRef.current && !reasonInputRef.current.contains(event.target)) {
         setShowReasonDropdown(false);
         setSelectedReasonIndex(-1);
-        if (isCustomReason && customReason.trim()) {
+        if (isCustomReason && tempInputValue.trim()) {
           handleSaveCustomReason();
         }
       }
@@ -64,7 +65,7 @@ const RecipientRow = ({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isCustomReason, customReason]);
+  }, [isCustomReason, tempInputValue]);
 
   useEffect(() => {
     if (selectedUserRef.current && userDropdownRef.current) {
@@ -176,6 +177,7 @@ const RecipientRow = ({
   const handleReasonSelect = (reason) => {
     if (reason === 'Other') {
       setIsCustomReason(true);
+      setTempInputValue('');
       setCustomReason('');
       updateRecipient(index, { ...recipient, reason: '' });
     } else {
@@ -187,10 +189,11 @@ const RecipientRow = ({
   };
 
   const handleSaveCustomReason = () => {
-    if (customReason.trim()) {
-      onAddTempReason(customReason.trim());
-      updateRecipient(index, { ...recipient, reason: customReason.trim() });
-      setIsCustomReason(false);
+    if (tempInputValue.trim()) {
+      const finalValue = tempInputValue.trim();
+      setCustomReason(finalValue);
+      onAddTempReason(finalValue);
+      updateRecipient(index, { ...recipient, reason: finalValue });
     }
   };
 
@@ -215,7 +218,13 @@ const RecipientRow = ({
 
   const handleCustomReasonChange = (e) => {
     const value = e.target.value;
-    setCustomReason(value);
+    setTempInputValue(value);
+  };
+
+  const handleCustomReasonBlur = () => {
+    if (tempInputValue.trim()) {
+      handleSaveCustomReason();
+    }
   };
 
   const content = (
@@ -313,9 +322,10 @@ const RecipientRow = ({
                 type="text"
                 placeholder="Enter custom reason"
                 className="flex-1 outline-none text-sm min-w-0 truncate"
-                value={customReason}
+                value={tempInputValue}
                 onChange={handleCustomReasonChange}
                 onKeyDown={handleReasonKeyDown}
+                onBlur={handleCustomReasonBlur}
               />
             ) : (
               <>
