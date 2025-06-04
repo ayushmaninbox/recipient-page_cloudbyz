@@ -201,7 +201,7 @@ const RecipientRow = ({
 
           {/* Reason dropdown */}
           {showReasonDropdown && (
-            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
               {getAllReasons().map((reason, i) => (
                 <div
                   key={i}
@@ -232,7 +232,10 @@ const RecipientRow = ({
               <h2 className="text-lg font-semibold">Type your reason</h2>
               <button 
                 className="text-gray-500 hover:text-gray-700" 
-                onClick={() => setShowCustomReasonModal(false)}
+                onClick={() => {
+                  setShowCustomReasonModal(false);
+                  setCustomReason('');
+                }}
               >
                 <X size={20} />
               </button>
