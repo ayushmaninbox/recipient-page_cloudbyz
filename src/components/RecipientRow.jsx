@@ -16,6 +16,7 @@ const RecipientRow = ({
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
   const [showCustomReasonModal, setShowCustomReasonModal] = useState(false);
   const [customReason, setCustomReason] = useState('');
+  const [customReasons, setCustomReasons] = useState([]);
   
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -26,6 +27,11 @@ const RecipientRow = ({
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get initials from name
+  const getInitials = (name) => {
+    return name.split(' ')[0][0].toUpperCase();
+  };
 
   // Handle outside click for dropdowns
   useEffect(() => {
@@ -47,7 +53,7 @@ const RecipientRow = ({
   // Handle user selection
   const handleUserSelect = (user) => {
     updateRecipient(index, { 
-      ...recipient, 
+      ...recipient,
       name: user.name, 
       email: user.email 
     });
@@ -55,14 +61,17 @@ const RecipientRow = ({
     setSearchTerm('');
   };
 
-  // Handle enter key in user input
-  const handleUserInputKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (filteredUsers.length > 0) {
-        handleUserSelect(filteredUsers[0]);
-      }
-    }
+  // Handle user input change
+  const handleUserInputChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    updateRecipient(index, { ...recipient, name: value });
+  };
+
+  // Handle email change
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    updateRecipient(index, { ...recipient, email: value });
   };
 
   // Handle reason selection
@@ -78,21 +87,27 @@ const RecipientRow = ({
   // Handle custom reason submission
   const handleCustomReasonSubmit = () => {
     if (customReason.trim()) {
-      updateRecipient(index, { ...recipient, reason: customReason });
+      const newReason = customReason.slice(0, 50);
+      updateRecipient(index, { ...recipient, reason: newReason });
+      if (!customReasons.includes(newReason)) {
+        setCustomReasons([...customReasons, newReason]);
+      }
     }
     setShowCustomReasonModal(false);
     setCustomReason('');
   };
 
-  // Get background color for the indicator
-  const indicatorColor = colors[index % colors.length];
+  // Get all reasons including custom ones
+  const getAllReasons = () => {
+    return [...reasonOptions, ...customReasons.filter(reason => !reasonOptions.includes(reason))];
+  };
 
   return (
     <div className="relative mb-4 bg-white rounded-lg shadow overflow-visible">
       {/* Left color indicator */}
       <div 
         className="absolute left-0 top-0 bottom-0 w-1.5" 
-        style={{ backgroundColor: indicatorColor }}
+        style={{ backgroundColor: colors[index % colors.length] }}
       />
 
       <div className="flex items-center px-4 py-3">
@@ -116,12 +131,11 @@ const RecipientRow = ({
             <User size={18} className="text-gray-500 mr-2" />
             <input
               type="text"
-              placeholder="Select a user"
+              placeholder="Select or type a name"
               className="flex-1 outline-none text-sm"
-              value={searchTerm !== '' ? searchTerm : recipient.name}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchTerm || recipient.name}
+              onChange={handleUserInputChange}
               onFocus={() => setShowUserDropdown(true)}
-              onKeyDown={handleUserInputKeyDown}
             />
             <ChevronDown size={16} className="text-gray-500" />
           </div>
@@ -139,10 +153,12 @@ const RecipientRow = ({
                     className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center"
                     onClick={() => handleUserSelect(user)}
                   >
-                    <User size={16} className="text-gray-500 mr-2" />
-                    <div>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+                      {getInitials(user.name)}
+                    </div>
+                    <div className="flex flex-col">
                       <span className="text-sm font-medium">{user.name}</span>
-                      <span className="text-sm text-gray-500 ml-2">({user.email})</span>
+                      <span className="text-xs text-gray-500">{user.email}</span>
                     </div>
                   </div>
                 ))
@@ -159,9 +175,9 @@ const RecipientRow = ({
             <input
               type="email"
               value={recipient.email}
-              placeholder="Recipient Email"
+              onChange={handleEmailChange}
+              placeholder="Enter email"
               className="flex-1 outline-none text-sm"
-              readOnly
             />
           </div>
         </div>
@@ -186,7 +202,7 @@ const RecipientRow = ({
           {/* Reason dropdown */}
           {showReasonDropdown && (
             <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-              {reasonOptions.map((reason, i) => (
+              {getAllReasons().map((reason, i) => (
                 <div
                   key={i}
                   className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm"
@@ -213,7 +229,7 @@ const RecipientRow = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-96 max-w-full">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Please give the new Reason for Signature!</h2>
+              <h2 className="text-lg font-semibold">Type your reason</h2>
               <button 
                 className="text-gray-500 hover:text-gray-700" 
                 onClick={() => setShowCustomReasonModal(false)}
@@ -221,14 +237,19 @@ const RecipientRow = ({
                 <X size={20} />
               </button>
             </div>
-            <input
-              type="text"
-              placeholder="Enter your input..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4"
-              value={customReason}
-              onChange={(e) => setCustomReason(e.target.value)}
-              autoFocus
-            />
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Enter your reason (max 50 characters)"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value.slice(0, 50))}
+                autoFocus
+              />
+              <span className="absolute right-2 bottom-4 text-xs text-gray-500">
+                {customReason.length}/50
+              </span>
+            </div>
             <button
               className="w-full bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 transition-colors"
               onClick={handleCustomReasonSubmit}
