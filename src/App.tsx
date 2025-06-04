@@ -1,14 +1,8 @@
 import React from 'react';
-import Recipients from './components/Recipients.jsx';
-import Navbar from './components/Navbar';
+import RecipientPage from './components/RecipientPage';
 
 function App() {
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
-      <Recipients />
-    </div>
-  );
+  return <RecipientPage />;
 }
 
 export default App;

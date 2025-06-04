@@ -1,7 +1,61 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { User, ChevronDown, Trash2, GripVertical, FileText, Mail } from 'lucide-react';
-import { Draggable } from 'react-beautiful-dnd';
+import React, { useState, useEffect, useRef } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  User, ChevronDown, Trash2, GripVertical, FileText, 
+  Mail, Plus, CheckCircle2, XCircle, X 
+} from 'lucide-react';
 
+// Toast component for displaying success/error messages
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 50, scale: 0.3 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+        className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+          type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
+        }`}
+      >
+        {type === 'success' ? (
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+        ) : (
+          <XCircle className="w-5 h-5 text-red-500" />
+        )}
+        <span className="text-sm font-medium">{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-2 p-1 hover:bg-black/5 rounded-full transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+// Navbar component for the top navigation bar
+const Navbar = () => {
+  return (
+    <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
+      <img src="/images/cloudbyz.png" alt="Cloudbyz Logo" className="h-8 object-contain" />
+      <a 
+        href="https://www.google.com" 
+        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+      >
+        <User className="w-5 h-5 text-slate-600" />
+      </a>
+    </nav>
+  );
+};
+
+// RecipientRow component for individual recipient entries
 const RecipientRow = ({ 
   index, 
   recipient, 
@@ -14,6 +68,7 @@ const RecipientRow = ({
   otherReasons,
   onAddTempReason
 }) => {
+  // State management for dropdowns and input values
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +78,7 @@ const RecipientRow = ({
   const [selectedReasonIndex, setSelectedReasonIndex] = useState(-1);
   const [tempInputValue, setTempInputValue] = useState('');
   
+  // Refs for handling dropdowns and selections
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
   const reasonInputRef = useRef(null);
@@ -30,6 +86,7 @@ const RecipientRow = ({
   const selectedUserRef = useRef(null);
   const selectedReasonRef = useRef(null);
 
+  // Filter users based on search term
   const filteredUsers = users
     .filter(user => 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -37,6 +94,7 @@ const RecipientRow = ({
     )
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Helper function to get initials from name
   const getInitials = (name) => {
     if (!name) return '';
     const names = name.split(' ');
@@ -46,6 +104,7 @@ const RecipientRow = ({
     return name[0].toUpperCase();
   };
 
+  // Handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
@@ -67,6 +126,7 @@ const RecipientRow = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isCustomReason, tempInputValue]);
 
+  // Handle dropdown scroll for keyboard navigation
   useEffect(() => {
     if (selectedUserRef.current && userDropdownRef.current) {
       const dropdownRect = userDropdownRef.current.getBoundingClientRect();
@@ -93,6 +153,7 @@ const RecipientRow = ({
     }
   }, [selectedReasonIndex]);
 
+  // Keyboard navigation handlers
   const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
 
@@ -163,6 +224,7 @@ const RecipientRow = ({
     }
   };
 
+  // Selection handlers
   const handleUserSelect = (user) => {
     updateRecipient(index, { 
       ...recipient,
@@ -204,6 +266,7 @@ const RecipientRow = ({
     }
   }, [customReason]);
 
+  // Input change handlers
   const handleUserInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -419,4 +482,223 @@ const RecipientRow = ({
   );
 };
 
-export default RecipientRow;
+// Main Recipients component for managing the list of recipients
+const Recipients = () => {
+  const [showSignInOrder, setShowSignInOrder] = useState(false);
+  const [recipients, setRecipients] = useState([
+    { id: 'recipient-1', name: '', email: '', reason: '' }
+  ]);
+  const [users, setUsers] = useState([]);
+  const [signatureReasons, setSignatureReasons] = useState([]);
+  const [otherReasons, setOtherReasons] = useState([]);
+  const [tempReasons, setTempReasons] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  // Fetch initial data
+  useEffect(() => {
+    fetch('http://localhost:3000/api/data')
+      .then(response => response.json())
+      .then(data => {
+        setUsers(Array.isArray(data.users) ? data.users : []);
+        setSignatureReasons(Array.isArray(data.signatureReasons) ? data.signatureReasons : []);
+        setOtherReasons(Array.isArray(data.otherReasons) ? data.otherReasons : []);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        setUsers([]);
+        setSignatureReasons([]);
+        setOtherReasons([]);
+      });
+  }, []);
+
+  const showToast = (message, type) => {
+    setToast({ show: true, message, type });
+  };
+
+  const recipientColors = [
+    '#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#EF4444',
+  ];
+
+  const updateRecipient = (index, newData) => {
+    const updatedRecipients = [...recipients];
+    updatedRecipients[index] = { ...newData, id: recipients[index].id };
+    setRecipients(updatedRecipients);
+  };
+
+  const deleteRecipient = (index) => {
+    if (recipients.length > 1) {
+      const updatedRecipients = recipients.filter((_, i) => i !== index);
+      setRecipients(updatedRecipients);
+    }
+  };
+
+  const addNewRecipient = () => {
+    const newId = `recipient-${recipients.length + 1}`;
+    setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const items = Array.from(recipients);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setRecipients(items);
+  };
+
+  const addTempReason = (reason) => {
+    if (!tempReasons.includes(reason)) {
+      setTempReasons([...tempReasons, reason]);
+    }
+  };
+
+  const handleNext = async () => {
+    const hasInvalidEmail = recipients.some(recipient => 
+      recipient.email && !recipient.email.includes('@')
+    );
+
+    if (hasInvalidEmail) {
+      showToast('Please enter valid email addresses', 'error');
+      return;
+    }
+
+    for (const reason of tempReasons) {
+      try {
+        await fetch('http://localhost:3000/api/reasons', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            reason,
+            addToSignatureReasons: true
+          }),
+        });
+      } catch (error) {
+        console.error('Error saving reason:', error);
+      }
+    }
+
+    if (tempReasons.length > 0) {
+      showToast('Successfully saved all new reasons', 'success');
+    }
+
+    console.log('Proceeding with recipients:', recipients);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-14">
+      <header className="bg-white/70 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
+        <div className="flex items-center w-1/3">
+          <a
+            href="https://www.google.com"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all duration-200 group"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              strokeWidth={2} 
+              stroke="currentColor" 
+              className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back
+          </a>
+        </div>
+        <div className="flex-1 text-center">
+          <h1 className="text-xl font-semibold text-gray-800">Setup the Signature</h1>
+        </div>
+        <div className="w-1/3"></div>
+      </header>
+
+      <main className="container mx-auto px-4 py-24 max-w-5xl">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+          <div className="mb-6 flex items-center">
+            <input
+              type="checkbox"
+              id="signInOrder"
+              checked={showSignInOrder}
+              onChange={() => setShowSignInOrder(!showSignInOrder)}
+              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            />
+            <label htmlFor="signInOrder" className="ml-2 text-sm font-medium text-gray-700">
+              Sign in order?
+            </label>
+          </div>
+
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="recipients">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  <div className="space-y-4">
+                    {recipients.map((recipient, index) => (
+                      <RecipientRow
+                        key={recipient.id}
+                        index={index}
+                        recipient={recipient}
+                        updateRecipient={updateRecipient}
+                        deleteRecipient={deleteRecipient}
+                        users={users}
+                        reasonOptions={[...signatureReasons, ...tempReasons]}
+                        otherReasons={otherReasons}
+                        showOrder={showSignInOrder}
+                        colors={recipientColors}
+                        onAddTempReason={addTempReason}
+                      />
+                    ))}
+                  </div>
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+
+          <div className="mt-6">
+            <button
+              onClick={addNewRecipient}
+              className="flex items-center bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md shadow-blue-500/20"
+            >
+              <Plus size={18} className="mr-2" />
+              Add Another Recipient
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={handleNext}
+            className="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-gray-900 px-8 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-amber-400/20"
+          >
+            Next
+          </button>
+        </div>
+      </main>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
+    </div>
+  );
+};
+
+// Main App component
+const RecipientPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <Recipients />
+    </div>
+  );
+};
+
+export default RecipientPage;
