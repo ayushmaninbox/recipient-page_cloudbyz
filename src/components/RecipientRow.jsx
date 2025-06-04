@@ -206,7 +206,7 @@ const RecipientRow = ({
           <div
             ref={reasonDropdownRef}
             className="flex items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer"
-            onClick={() => !isCustomReason && setShowReasonDropdown(true)}
+            onClick={() => !isCustomReason && setShowReasonDropdown(!showReasonDropdown)}
           >
             {isCustomReason ? (
               <div className="flex items-center w-full">
@@ -224,14 +224,9 @@ const RecipientRow = ({
               </div>
             ) : (
               <>
-                <input
-                  type="text"
-                  placeholder="Select reason to sign"
-                  className="flex-1 outline-none text-sm cursor-pointer min-w-0 truncate"
-                  value={recipient.reason}
-                  readOnly
-                  onClick={() => setShowReasonDropdown(true)}
-                />
+                <span className={`flex-1 text-sm ${recipient.reason ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {recipient.reason || 'Select reason to sign'}
+                </span>
                 <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
               </>
             )}
