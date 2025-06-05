@@ -1,24 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, ChevronDown, Trash2, GripVertical, FileText, 
-  Mail, Plus, CheckCircle2, XCircle, X
+  Mail, Plus, CheckCircle2, XCircle, X 
 } from 'lucide-react';
 
 const Toast = ({ message, type, onClose }) => {
@@ -95,29 +80,6 @@ const RecipientRow = ({
   const reasonDropdownRef = useRef(null);
   const selectedUserRef = useRef(null);
   const selectedReasonRef = useRef(null);
-  const containerRef = useRef(null);
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ 
-    id: recipient.id,
-    transition: {
-      duration: 150,
-      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
-    }
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : 'auto',
-    opacity: isDragging ? 0.5 : 1,
-  };
 
   const filteredUsers = users
     .filter(user => 
@@ -181,48 +143,6 @@ const RecipientRow = ({
       }
     }
   }, [selectedReasonIndex]);
-
-  useEffect(() => {
-    if (showUserDropdown || showReasonDropdown) {
-      const updateDropdownPosition = () => {
-        if (containerRef.current) {
-          const containerRect = containerRef.current.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          
-          if (userDropdownRef.current && showUserDropdown) {
-            const dropdownRect = userDropdownRef.current.getBoundingClientRect();
-            if (dropdownRect.bottom > viewportHeight) {
-              userDropdownRef.current.style.bottom = '100%';
-              userDropdownRef.current.style.top = 'auto';
-            } else {
-              userDropdownRef.current.style.top = '100%';
-              userDropdownRef.current.style.bottom = 'auto';
-            }
-          }
-          
-          if (reasonDropdownRef.current && showReasonDropdown) {
-            const dropdownRect = reasonDropdownRef.current.getBoundingClientRect();
-            if (dropdownRect.bottom > viewportHeight) {
-              reasonDropdownRef.current.style.bottom = '100%';
-              reasonDropdownRef.current.style.top = 'auto';
-            } else {
-              reasonDropdownRef.current.style.top = '100%';
-              reasonDropdownRef.current.style.bottom = 'auto';
-            }
-          }
-        }
-      };
-
-      updateDropdownPosition();
-      window.addEventListener('scroll', updateDropdownPosition);
-      window.addEventListener('resize', updateDropdownPosition);
-
-      return () => {
-        window.removeEventListener('scroll', updateDropdownPosition);
-        window.removeEventListener('resize', updateDropdownPosition);
-      };
-    }
-  }, [showUserDropdown, showReasonDropdown]);
 
   const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
@@ -358,32 +278,20 @@ const RecipientRow = ({
     }
   };
 
-  return (
-    <motion.div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl"
-      layout
-      transition={{
-        layout: { duration: 0.2 },
-        opacity: { duration: 0.2 }
-      }}
-    >
+  const content = (
+    <div className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl" style={{ zIndex: showUserDropdown || showReasonDropdown ? 50 - index : 10 }}>
       <div 
         className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl" 
         style={{ backgroundColor: colors[index % colors.length] }}
       />
 
-      <div className="flex items-center px-6 py-4" ref={containerRef}>
+      <div className="flex items-center px-6 py-4">
         {showOrder && (
           <div className="flex items-center mr-3">
             <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
               {index + 1}
             </span>
-            <div {...listeners} className="ml-2 cursor-move">
-              <GripVertical size={18} className="text-gray-400" />
-            </div>
+            <GripVertical size={18} className="ml-2 text-gray-400 cursor-move" />
           </div>
         )}
 
@@ -409,7 +317,7 @@ const RecipientRow = ({
           {showUserDropdown && (
             <div 
               ref={userDropdownRef} 
-              className="absolute z-[200] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, i) => (
@@ -489,7 +397,7 @@ const RecipientRow = ({
           {showReasonDropdown && !isCustomReason && (
             <div 
               ref={reasonDropdownRef} 
-              className="absolute z-[200] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {reasonOptions.map((reason, i) => (
                 <div
@@ -540,7 +448,25 @@ const RecipientRow = ({
           <Trash2 size={20} />
         </button>
       </div>
-    </motion.div>
+    </div>
+  );
+
+  return (
+    <Draggable 
+      draggableId={recipient.id}
+      index={index}
+      isDragDisabled={!showOrder}
+    >
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...(showOrder ? provided.dragHandleProps : {})}
+        >
+          {content}
+        </div>
+      )}
+    </Draggable>
   );
 };
 
@@ -554,17 +480,6 @@ const Recipients = () => {
   const [otherReasons, setOtherReasons] = useState([]);
   const [tempReasons, setTempReasons] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   useEffect(() => {
     fetch('http://localhost:3000/api/data')
@@ -608,17 +523,14 @@ const Recipients = () => {
     setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
   };
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    
-    if (active.id !== over.id) {
-      setRecipients((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const items = Array.from(recipients);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setRecipients(items);
   };
 
   const addTempReason = (reason) => {
@@ -663,7 +575,7 @@ const Recipients = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-CloudbyzBlue/10 via-indigo-50 to-purple-50 pt-14">
-      <header className="bg-white shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
+      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white/70 to-CloudbyzBlue/10 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center w-1/3">
           <a
             href="https://www.google.com"
@@ -710,34 +622,35 @@ const Recipients = () => {
             </label>
           </div>
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={recipients.map(r => r.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-4">
-                {recipients.map((recipient, index) => (
-                  <RecipientRow
-                    key={recipient.id}
-                    index={index}
-                    recipient={recipient}
-                    updateRecipient={updateRecipient}
-                    deleteRecipient={deleteRecipient}
-                    users={users}
-                    reasonOptions={[...signatureReasons, ...tempReasons]}
-                    otherReasons={otherReasons}
-                    showOrder={showSignInOrder}
-                    colors={recipientColors}
-                    onAddTempReason={addTempReason}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="recipients">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  <div className="space-y-4">
+                    {recipients.map((recipient, index) => (
+                      <RecipientRow
+                        key={recipient.id}
+                        index={index}
+                        recipient={recipient}
+                        updateRecipient={updateRecipient}
+                        deleteRecipient={deleteRecipient}
+                        users={users}
+                        reasonOptions={[...signatureReasons, ...tempReasons]}
+                        otherReasons={otherReasons}
+                        showOrder={showSignInOrder}
+                        colors={recipientColors}
+                        onAddTempReason={addTempReason}
+                      />
+                    ))}
+                  </div>
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
 
           <div className="mt-6">
             <button
