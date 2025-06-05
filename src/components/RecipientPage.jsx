@@ -21,6 +21,7 @@ import {
   Mail, Plus, CheckCircle2, XCircle, X, ChevronUp 
 } from 'lucide-react';
 
+// Toast component remains unchanged
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -36,7 +37,6 @@ const Toast = ({ message, type, onClose }) => {
         className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
           type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
         }`}
-        style={{ zIndex: 1000 }}
       >
         {type === 'success' ? (
           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -55,9 +55,10 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
+// Navbar component remains unchanged
 const Navbar = () => {
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 h-14 px-6 flex justify-between items-center">
+    <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
       <img src="/images/cloudbyz.png" alt="Cloudbyz Logo" className="h-8 object-contain" />
       <a 
         href="https://www.google.com" 
@@ -119,7 +120,7 @@ const RecipientRow = ({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 20 : 1,
+    zIndex: isDragging ? 50 : 'auto',
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -139,6 +140,7 @@ const RecipientRow = ({
     return name[0].toUpperCase();
   };
 
+  // All existing useEffect hooks and handlers remain unchanged
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
@@ -320,22 +322,6 @@ const RecipientRow = ({
     }
   };
 
-  const handleMoveUp = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isFirst) {
-      onMoveUp(index);
-    }
-  };
-
-  const handleMoveDown = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isLast) {
-      onMoveDown(index);
-    }
-  };
-
   return (
     <motion.div
       ref={setNodeRef}
@@ -361,7 +347,7 @@ const RecipientRow = ({
             </span>
             <div className="ml-2 flex flex-col">
               <button
-                onClick={handleMoveUp}
+                onClick={() => onMoveUp(index)}
                 disabled={isFirst}
                 className={`p-0.5 hover:bg-gray-100 rounded transition-colors ${
                   isFirst ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'
@@ -370,7 +356,7 @@ const RecipientRow = ({
                 <ChevronUp size={16} className="text-gray-500" />
               </button>
               <button
-                onClick={handleMoveDown}
+                onClick={() => onMoveDown(index)}
                 disabled={isLast}
                 className={`p-0.5 hover:bg-gray-100 rounded transition-colors ${
                   isLast ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'
@@ -407,7 +393,7 @@ const RecipientRow = ({
           {showUserDropdown && (
             <div 
               ref={userDropdownRef} 
-              className="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, i) => (
@@ -487,7 +473,7 @@ const RecipientRow = ({
           {showReasonDropdown && !isCustomReason && (
             <div 
               ref={reasonDropdownRef} 
-              className="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {reasonOptions.map((reason, i) => (
                 <div
@@ -552,8 +538,6 @@ const Recipients = () => {
   const [otherReasons, setOtherReasons] = useState([]);
   const [tempReasons, setTempReasons] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-
-  const containerRef = useRef(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -675,7 +659,7 @@ const Recipients = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-CloudbyzBlue/10 via-indigo-50 to-purple-50 pt-14">
-      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white/70 to-CloudbyzBlue/10 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-40">
+      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white/70 to-CloudbyzBlue/10 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center w-1/3">
           <a
             href="https://www.google.com"
@@ -707,7 +691,7 @@ const Recipients = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-24 max-w-5xl" ref={containerRef}>
+      <main className="container mx-auto px-4 py-24 max-w-5xl">
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
           <div className="mb-6 flex items-center">
             <input
@@ -726,26 +710,6 @@ const Recipients = () => {
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
-            modifiers={[
-              (args) => {
-                if (!containerRef.current) return args;
-                const containerRect = containerRef.current.getBoundingClientRect();
-                const { transform } = args;
-                return {
-                  ...args,
-                  transform: {
-                    ...transform,
-                    y: Math.max(
-                      Math.min(
-                        transform.y,
-                        containerRect.bottom - 100
-                      ),
-                      containerRect.top
-                    ),
-                  },
-                };
-              },
-            ]}
           >
             <SortableContext
               items={recipients.map(r => r.id)}
