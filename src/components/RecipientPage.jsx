@@ -95,6 +95,7 @@ const RecipientRow = ({
   const reasonDropdownRef = useRef(null);
   const selectedUserRef = useRef(null);
   const selectedReasonRef = useRef(null);
+  const containerRef = useRef(null);
 
   const {
     attributes,
@@ -180,6 +181,48 @@ const RecipientRow = ({
       }
     }
   }, [selectedReasonIndex]);
+
+  useEffect(() => {
+    if (showUserDropdown || showReasonDropdown) {
+      const updateDropdownPosition = () => {
+        if (containerRef.current) {
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          
+          if (userDropdownRef.current && showUserDropdown) {
+            const dropdownRect = userDropdownRef.current.getBoundingClientRect();
+            if (dropdownRect.bottom > viewportHeight) {
+              userDropdownRef.current.style.bottom = '100%';
+              userDropdownRef.current.style.top = 'auto';
+            } else {
+              userDropdownRef.current.style.top = '100%';
+              userDropdownRef.current.style.bottom = 'auto';
+            }
+          }
+          
+          if (reasonDropdownRef.current && showReasonDropdown) {
+            const dropdownRect = reasonDropdownRef.current.getBoundingClientRect();
+            if (dropdownRect.bottom > viewportHeight) {
+              reasonDropdownRef.current.style.bottom = '100%';
+              reasonDropdownRef.current.style.top = 'auto';
+            } else {
+              reasonDropdownRef.current.style.top = '100%';
+              reasonDropdownRef.current.style.bottom = 'auto';
+            }
+          }
+        }
+      };
+
+      updateDropdownPosition();
+      window.addEventListener('scroll', updateDropdownPosition);
+      window.addEventListener('resize', updateDropdownPosition);
+
+      return () => {
+        window.removeEventListener('scroll', updateDropdownPosition);
+        window.removeEventListener('resize', updateDropdownPosition);
+      };
+    }
+  }, [showUserDropdown, showReasonDropdown]);
 
   const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
@@ -332,7 +375,7 @@ const RecipientRow = ({
         style={{ backgroundColor: colors[index % colors.length] }}
       />
 
-      <div className="flex items-center px-6 py-4">
+      <div className="flex items-center px-6 py-4" ref={containerRef}>
         {showOrder && (
           <div className="flex items-center mr-3">
             <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
