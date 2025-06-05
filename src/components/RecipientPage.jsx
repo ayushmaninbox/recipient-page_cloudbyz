@@ -22,9 +22,52 @@ import {
   Mail, Plus, CheckCircle2, XCircle, X, ChevronUp 
 } from 'lucide-react';
 
-// ... (Toast component remains unchanged)
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
-// ... (Navbar component remains unchanged)
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 50, scale: 0.3 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+        className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+          type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
+        }`}
+      >
+        {type === 'success' ? (
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+        ) : (
+          <XCircle className="w-5 h-5 text-red-500" />
+        )}
+        <span className="text-sm font-medium">{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-2 p-1 hover:bg-black/5 rounded-full transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+const Navbar = () => {
+  return (
+    <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
+      <img src="/images/cloudbyz.png" alt="Cloudbyz Logo" className="h-8 object-contain" />
+      <a 
+        href="https://www.google.com" 
+        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+      >
+        <User className="w-5 h-5 text-slate-600" />
+      </a>
+    </nav>
+  );
+};
 
 const RecipientRow = ({ 
   index, 
@@ -42,7 +85,21 @@ const RecipientRow = ({
   isFirst,
   isLast
 }) => {
-  // ... (existing state and refs remain unchanged)
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showReasonDropdown, setShowReasonDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [customReason, setCustomReason] = useState('');
+  const [isCustomReason, setIsCustomReason] = useState(false);
+  const [selectedUserIndex, setSelectedUserIndex] = useState(-1);
+  const [selectedReasonIndex, setSelectedReasonIndex] = useState(-1);
+  const [tempInputValue, setTempInputValue] = useState('');
+  
+  const userInputRef = useRef(null);
+  const userDropdownRef = useRef(null);
+  const reasonInputRef = useRef(null);
+  const reasonDropdownRef = useRef(null);
+  const selectedUserRef = useRef(null);
+  const selectedReasonRef = useRef(null);
 
   const {
     attributes,
@@ -66,7 +123,208 @@ const RecipientRow = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // ... (existing handlers and effects remain unchanged)
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+  };
+
+  const filteredUsers = users
+    .filter(user => 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const getInitials = (name) => {
+    if (!name) return '';
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
+          userInputRef.current && !userInputRef.current.contains(event.target)) {
+        setShowUserDropdown(false);
+        setSelectedUserIndex(-1);
+      }
+      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(event.target) && 
+          reasonInputRef.current && !reasonInputRef.current.contains(event.target)) {
+        setShowReasonDropdown(false);
+        setSelectedReasonIndex(-1);
+        if (isCustomReason && tempInputValue.trim()) {
+          handleSaveCustomReason();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isCustomReason, tempInputValue]);
+
+  useEffect(() => {
+    if (selectedUserRef.current && userDropdownRef.current) {
+      const dropdownRect = userDropdownRef.current.getBoundingClientRect();
+      const selectedRect = selectedUserRef.current.getBoundingClientRect();
+      
+      if (selectedRect.bottom > dropdownRect.bottom) {
+        userDropdownRef.current.scrollTop += selectedRect.bottom - dropdownRect.bottom;
+      } else if (selectedRect.top < dropdownRect.top) {
+        userDropdownRef.current.scrollTop -= dropdownRect.top - selectedRect.top;
+      }
+    }
+  }, [selectedUserIndex]);
+
+  useEffect(() => {
+    if (selectedReasonRef.current && reasonDropdownRef.current) {
+      const dropdownRect = reasonDropdownRef.current.getBoundingClientRect();
+      const selectedRect = selectedReasonRef.current.getBoundingClientRect();
+      
+      if (selectedRect.bottom > dropdownRect.bottom) {
+        reasonDropdownRef.current.scrollTop += selectedRect.bottom - dropdownRect.bottom;
+      } else if (selectedRect.top < dropdownRect.top) {
+        reasonDropdownRef.current.scrollTop -= dropdownRect.top - selectedRect.top;
+      }
+    }
+  }, [selectedReasonIndex]);
+
+  const handleUserKeyDown = (e) => {
+    if (!showUserDropdown || filteredUsers.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedUserIndex(prev => 
+          prev < filteredUsers.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedUserIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedUserIndex >= 0) {
+          handleUserSelect(filteredUsers[selectedUserIndex]);
+        } else {
+          const matchedUser = users.find(
+            user => user.name.toLowerCase() === searchTerm.toLowerCase()
+          );
+          if (matchedUser) {
+            handleUserSelect(matchedUser);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleReasonKeyDown = (e) => {
+    if (isCustomReason) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSaveCustomReason();
+      }
+      return;
+    }
+
+    if (!showReasonDropdown || reasonOptions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedReasonIndex(prev => 
+          prev < reasonOptions.length + otherReasons.length ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedReasonIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedReasonIndex >= 0) {
+          if (selectedReasonIndex === reasonOptions.length + otherReasons.length) {
+            handleReasonSelect('Other');
+          } else {
+            const allReasons = [...reasonOptions, ...otherReasons];
+            handleReasonSelect(allReasons[selectedReasonIndex]);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleUserSelect = (user) => {
+    updateRecipient(index, { 
+      ...recipient,
+      name: user.name, 
+      email: user.email 
+    });
+    setShowUserDropdown(false);
+    setSearchTerm('');
+    setSelectedUserIndex(-1);
+  };
+
+  const handleReasonSelect = (reason) => {
+    if (reason === 'Other') {
+      setIsCustomReason(true);
+      setTempInputValue('');
+      setCustomReason('');
+      updateRecipient(index, { ...recipient, reason: '' });
+    } else {
+      setIsCustomReason(false);
+      updateRecipient(index, { ...recipient, reason });
+    }
+    setShowReasonDropdown(false);
+    setSelectedReasonIndex(-1);
+  };
+
+  const handleSaveCustomReason = () => {
+    if (tempInputValue.trim()) {
+      const finalValue = tempInputValue.trim();
+      setCustomReason(finalValue);
+      onAddTempReason(finalValue);
+      updateRecipient(index, { ...recipient, reason: finalValue });
+    }
+  };
+
+  useEffect(() => {
+    if (isCustomReason && customReason.trim()) {
+      onAddTempReason(customReason.trim());
+      updateRecipient(index, { ...recipient, reason: customReason.trim() });
+    }
+  }, [customReason]);
+
+  const handleUserInputChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setSelectedUserIndex(-1);
+    updateRecipient(index, { ...recipient, name: value });
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    updateRecipient(index, { ...recipient, email: value });
+  };
+
+  const handleCustomReasonChange = (e) => {
+    const value = e.target.value;
+    setTempInputValue(value);
+  };
+
+  const handleCustomReasonBlur = () => {
+    if (tempInputValue.trim()) {
+      handleSaveCustomReason();
+    }
+  };
 
   return (
     <div
