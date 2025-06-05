@@ -6,7 +6,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -22,6 +21,7 @@ import {
   Mail, Plus, CheckCircle2, XCircle, X, ChevronUp 
 } from 'lucide-react';
 
+// Toast component remains unchanged
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -55,6 +55,7 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
+// Navbar component remains unchanged
 const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
@@ -123,12 +124,6 @@ const RecipientRow = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : 'auto',
-  };
-
   const filteredUsers = users
     .filter(user => 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,6 +140,7 @@ const RecipientRow = ({
     return name[0].toUpperCase();
   };
 
+  // All existing useEffect hooks and handlers remain unchanged
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
@@ -327,11 +323,16 @@ const RecipientRow = ({
   };
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
       style={style}
       {...attributes}
       className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl"
+      layout
+      transition={{
+        layout: { duration: 0.2 },
+        opacity: { duration: 0.2 }
+      }}
     >
       <div 
         className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl" 
@@ -348,14 +349,18 @@ const RecipientRow = ({
               <button
                 onClick={() => onMoveUp(index)}
                 disabled={isFirst}
-                className={`p-0.5 hover:bg-gray-100 rounded ${isFirst ? 'opacity-30 cursor-not-allowed' : ''}`}
+                className={`p-0.5 hover:bg-gray-100 rounded transition-colors ${
+                  isFirst ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'
+                }`}
               >
                 <ChevronUp size={16} className="text-gray-500" />
               </button>
               <button
                 onClick={() => onMoveDown(index)}
                 disabled={isLast}
-                className={`p-0.5 hover:bg-gray-100 rounded ${isLast ? 'opacity-30 cursor-not-allowed' : ''}`}
+                className={`p-0.5 hover:bg-gray-100 rounded transition-colors ${
+                  isLast ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'
+                }`}
               >
                 <ChevronDown size={16} className="text-gray-500" />
               </button>
@@ -366,14 +371,173 @@ const RecipientRow = ({
           </div>
         )}
 
-        {/* ... (rest of the component remains unchanged) */}
+        <div className="relative flex-1 min-w-0">
+          <div 
+            ref={userInputRef}
+            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-CloudbyzBlue focus-within:ring-1 focus-within:ring-CloudbyzBlue bg-white transition-all"
+            onClick={() => setShowUserDropdown(true)}
+          >
+            <User size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+            <input
+              type="text"
+              placeholder="Select or type a name"
+              className="flex-1 outline-none text-sm min-w-0 truncate"
+              value={searchTerm || recipient.name}
+              onChange={handleUserInputChange}
+              onFocus={() => setShowUserDropdown(true)}
+              onKeyDown={handleUserKeyDown}
+            />
+            <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
+          </div>
+
+          {showUserDropdown && (
+            <div 
+              ref={userDropdownRef} 
+              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            >
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user, i) => (
+                  <div
+                    key={i}
+                    ref={selectedUserIndex === i ? selectedUserRef : null}
+                    className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer flex items-center ${
+                      selectedUserIndex === i ? 'bg-CloudbyzBlue/10' : ''
+                    }`}
+                    onClick={() => handleUserSelect(user)}
+                    onMouseEnter={() => setSelectedUserIndex(i)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-CloudbyzBlue/20 text-CloudbyzBlue flex items-center justify-center mr-3 flex-shrink-0">
+                      {getInitials(user.name)}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate">{user.name}</span>
+                      <span className="text-xs text-gray-500 truncate">{user.email}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-sm text-gray-500">No users found</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="relative flex-1 min-w-0 mx-2">
+          <div className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 bg-white">
+            <Mail size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+            <input
+              type="email"
+              value={recipient.email}
+              onChange={handleEmailChange}
+              placeholder="Enter email"
+              className={`flex-1 outline-none text-sm min-w-0 truncate ${
+                recipient.email && !recipient.email.includes('@') ? 'text-red-500' : ''
+              }`}
+            />
+          </div>
+        </div>
+
+        <div className="relative flex-1 min-w-0">
+          <div 
+            ref={reasonInputRef}
+            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-CloudbyzBlue focus-within:ring-1 focus-within:ring-CloudbyzBlue bg-white transition-all"
+            onClick={() => !isCustomReason && setShowReasonDropdown(true)}
+          >
+            <FileText size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+            {isCustomReason ? (
+              <input
+                type="text"
+                placeholder="Enter custom reason"
+                className="flex-1 outline-none text-sm min-w-0 truncate"
+                value={tempInputValue}
+                onChange={handleCustomReasonChange}
+                onKeyDown={handleReasonKeyDown}
+                onBlur={handleCustomReasonBlur}
+              />
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Select reason to sign"
+                  className="flex-1 outline-none text-sm min-w-0 truncate cursor-pointer"
+                  value={recipient.reason}
+                  readOnly
+                  onClick={() => setShowReasonDropdown(true)}
+                  onKeyDown={handleReasonKeyDown}
+                />
+                <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
+              </>
+            )}
+          </div>
+
+          {showReasonDropdown && !isCustomReason && (
+            <div 
+              ref={reasonDropdownRef} 
+              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            >
+              {reasonOptions.map((reason, i) => (
+                <div
+                  key={i}
+                  ref={selectedReasonIndex === i ? selectedReasonRef : null}
+                  className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer ${
+                    selectedReasonIndex === i ? 'bg-CloudbyzBlue/10' : ''
+                  }`}
+                  onClick={() => handleReasonSelect(reason)}
+                  onMouseEnter={() => setSelectedReasonIndex(i)}
+                >
+                  <span className="text-sm">{reason}</span>
+                </div>
+              ))}
+
+              {otherReasons.map((reason, i) => (
+                <div
+                  key={`custom-${i}`}
+                  ref={selectedReasonIndex === reasonOptions.length + i ? selectedReasonRef : null}
+                  className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer ${
+                    selectedReasonIndex === reasonOptions.length + i ? 'bg-CloudbyzBlue/10' : ''
+                  }`}
+                  onClick={() => handleReasonSelect(reason)}
+                  onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length + i)}
+                >
+                  <span className="text-sm">{reason}</span>
+                </div>
+              ))}
+
+              <div
+                ref={selectedReasonIndex === reasonOptions.length + otherReasons.length ? selectedReasonRef : null}
+                className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer border-t ${
+                  selectedReasonIndex === reasonOptions.length + otherReasons.length ? 'bg-CloudbyzBlue/10' : ''
+                }`}
+                onClick={() => handleReasonSelect('Other')}
+                onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length + otherReasons.length)}
+              >
+                <span className="text-sm font-medium text-CloudbyzBlue">Other reason...</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button 
+          className="ml-2 text-red-500 hover:text-red-700 transition-colors p-2 hover:bg-red-50 rounded-lg flex-shrink-0"
+          onClick={() => deleteRecipient(index)}
+        >
+          <Trash2 size={20} />
+        </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 const Recipients = () => {
-  // ... (existing state and hooks remain unchanged)
+  const [showSignInOrder, setShowSignInOrder] = useState(false);
+  const [recipients, setRecipients] = useState([
+    { id: 'recipient-1', name: '', email: '', reason: '' }
+  ]);
+  const [users, setUsers] = useState([]);
+  const [signatureReasons, setSignatureReasons] = useState([]);
+  const [otherReasons, setOtherReasons] = useState([]);
+  const [tempReasons, setTempReasons] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -385,6 +549,61 @@ const Recipients = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/data')
+      .then(response => response.json())
+      .then(data => {
+        setUsers(Array.isArray(data.users) ? data.users : []);
+        setSignatureReasons(Array.isArray(data.signatureReasons) ? data.signatureReasons : []);
+        setOtherReasons(Array.isArray(data.otherReasons) ? data.otherReasons : []);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        setUsers([]);
+        setSignatureReasons([]);
+        setOtherReasons([]);
+      });
+  }, []);
+
+  const showToast = (message, type) => {
+    setToast({ show: true, message, type });
+  };
+
+  const recipientColors = [
+    '#009edb', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#EF4444',
+  ];
+
+  const updateRecipient = (index, newData) => {
+    const updatedRecipients = [...recipients];
+    updatedRecipients[index] = { ...newData, id: recipients[index].id };
+    setRecipients(updatedRecipients);
+  };
+
+  const deleteRecipient = (index) => {
+    if (recipients.length > 1) {
+      const updatedRecipients = recipients.filter((_, i) => i !== index);
+      setRecipients(updatedRecipients);
+    }
+  };
+
+  const addNewRecipient = () => {
+    const newId = `recipient-${recipients.length + 1}`;
+    setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      setRecipients((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const moveRecipientUp = (index) => {
     if (index > 0) {
@@ -398,11 +617,79 @@ const Recipients = () => {
     }
   };
 
-  // ... (existing handlers remain unchanged)
+  const addTempReason = (reason) => {
+    if (!tempReasons.includes(reason)) {
+      setTempReasons([...tempReasons, reason]);
+    }
+  };
+
+  const handleNext = async () => {
+    const hasInvalidEmail = recipients.some(recipient => 
+      recipient.email && !recipient.email.includes('@')
+    );
+
+    if (hasInvalidEmail) {
+      showToast('Please enter valid email addresses', 'error');
+      return;
+    }
+
+    for (const reason of tempReasons) {
+      try {
+        await fetch('http://localhost:3000/api/reasons', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            reason,
+            addToSignatureReasons: true
+          }),
+        });
+      } catch (error) {
+        console.error('Error saving reason:', error);
+      }
+    }
+
+    if (tempReasons.length > 0) {
+      showToast('Successfully saved all new reasons', 'success');
+    }
+
+    console.log('Proceeding with recipients:', recipients);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-CloudbyzBlue/10 via-indigo-50 to-purple-50 pt-14">
-      {/* ... (header remains unchanged) */}
+      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white/70 to-CloudbyzBlue/10 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
+        <div className="flex items-center w-1/3">
+          <a
+            href="https://www.google.com"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all duration-200 group"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              strokeWidth={2} 
+              stroke="currentColor" 
+              className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back
+          </a>
+        </div>
+        <div className="flex-1 text-center">
+          <h1 className="text-xl font-semibold text-CloudbyzBlue">Setup the Signature</h1>
+        </div>
+        <div className="w-1/3 flex justify-end">
+          <a
+            href="https://www.google.com"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-CloudbyzBlue hover:text-white bg-white hover:bg-CloudbyzBlue rounded-lg transition-all duration-200 border border-CloudbyzBlue hover:border-transparent"
+          >
+            Add Bulk Signees
+          </a>
+        </div>
+      </header>
 
       <main className="container mx-auto px-4 py-24 max-w-5xl">
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
@@ -452,15 +739,45 @@ const Recipients = () => {
             </SortableContext>
           </DndContext>
 
-          {/* ... (rest of the component remains unchanged) */}
+          <div className="mt-6">
+            <button
+              onClick={addNewRecipient}
+              className="flex items-center bg-CloudbyzBlue hover:bg-CloudbyzBlue/90 active:bg-CloudbyzBlue text-white px-5 py-2.5 rounded-lg transition-colors shadow-md shadow-CloudbyzBlue/20"
+            >
+              <Plus size={18} className="mr-2" />
+              Add Another Recipient
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={handleNext}
+            className="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-gray-900 px-8 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-amber-400/20"
+          >
+            Next
+          </button>
         </div>
       </main>
 
-      {/* ... (toast remains unchanged) */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 };
 
-// ... (rest of the file remains unchanged)
+const RecipientPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <Recipients />
+    </div>
+  );
+};
 
-export default Recipients
+export default RecipientPage;
