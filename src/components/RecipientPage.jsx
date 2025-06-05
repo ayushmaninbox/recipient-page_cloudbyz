@@ -18,7 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, ChevronDown, Trash2, GripVertical, FileText, 
-  Mail, Plus, CheckCircle2, XCircle, X, ChevronUp 
+  Mail, Plus, CheckCircle2, XCircle, X
 } from 'lucide-react';
 
 // Toast component remains unchanged
@@ -80,11 +80,7 @@ const RecipientRow = ({
   colors,
   reasonOptions,
   otherReasons,
-  onAddTempReason,
-  onMoveUp,
-  onMoveDown,
-  isFirst,
-  isLast
+  onAddTempReason
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
@@ -140,7 +136,6 @@ const RecipientRow = ({
     return name[0].toUpperCase();
   };
 
-  // All existing useEffect hooks and handlers remain unchanged
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
@@ -345,26 +340,6 @@ const RecipientRow = ({
             <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
               {index + 1}
             </span>
-            <div className="ml-2 flex flex-col">
-              <button
-                onClick={() => onMoveUp(index)}
-                disabled={isFirst}
-                className={`p-0.5 hover:bg-gray-100 rounded transition-colors ${
-                  isFirst ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'
-                }`}
-              >
-                <ChevronUp size={16} className="text-gray-500" />
-              </button>
-              <button
-                onClick={() => onMoveDown(index)}
-                disabled={isLast}
-                className={`p-0.5 hover:bg-gray-100 rounded transition-colors ${
-                  isLast ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'
-                }`}
-              >
-                <ChevronDown size={16} className="text-gray-500" />
-              </button>
-            </div>
             <div {...listeners} className="ml-2 cursor-move">
               <GripVertical size={18} className="text-gray-400" />
             </div>
@@ -393,7 +368,7 @@ const RecipientRow = ({
           {showUserDropdown && (
             <div 
               ref={userDropdownRef} 
-              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, i) => (
@@ -473,7 +448,7 @@ const RecipientRow = ({
           {showReasonDropdown && !isCustomReason && (
             <div 
               ref={reasonDropdownRef} 
-              className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {reasonOptions.map((reason, i) => (
                 <div
@@ -605,18 +580,6 @@ const Recipients = () => {
     }
   };
 
-  const moveRecipientUp = (index) => {
-    if (index > 0) {
-      setRecipients((prev) => arrayMove(prev, index, index - 1));
-    }
-  };
-
-  const moveRecipientDown = (index) => {
-    if (index < recipients.length - 1) {
-      setRecipients((prev) => arrayMove(prev, index, index + 1));
-    }
-  };
-
   const addTempReason = (reason) => {
     if (!tempReasons.includes(reason)) {
       setTempReasons([...tempReasons, reason]);
@@ -659,7 +622,7 @@ const Recipients = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-CloudbyzBlue/10 via-indigo-50 to-purple-50 pt-14">
-      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white/70 to-CloudbyzBlue/10 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
+      <header className="bg-white shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center w-1/3">
           <a
             href="https://www.google.com"
@@ -729,10 +692,6 @@ const Recipients = () => {
                     showOrder={showSignInOrder}
                     colors={recipientColors}
                     onAddTempReason={addTempReason}
-                    onMoveUp={moveRecipientUp}
-                    onMoveDown={moveRecipientDown}
-                    isFirst={index === 0}
-                    isLast={index === recipients.length - 1}
                   />
                 ))}
               </div>
