@@ -298,7 +298,7 @@ const RecipientRow = ({
         <div className="relative flex-1 min-w-0">
           <div 
             ref={userInputRef}
-            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 bg-white transition-all"
+            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-CloudbyzBlue focus-within:ring-1 focus-within:ring-CloudbyzBlue bg-white transition-all"
             onClick={() => setShowUserDropdown(true)}
           >
             <User size={18} className="text-gray-500 mr-2 flex-shrink-0" />
@@ -324,13 +324,13 @@ const RecipientRow = ({
                   <div
                     key={i}
                     ref={selectedUserIndex === i ? selectedUserRef : null}
-                    className={`px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center ${
-                      selectedUserIndex === i ? 'bg-blue-50' : ''
+                    className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer flex items-center ${
+                      selectedUserIndex === i ? 'bg-CloudbyzBlue/10' : ''
                     }`}
                     onClick={() => handleUserSelect(user)}
                     onMouseEnter={() => setSelectedUserIndex(i)}
                   >
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-CloudbyzBlue/20 text-CloudbyzBlue flex items-center justify-center mr-3 flex-shrink-0">
                       {getInitials(user.name)}
                     </div>
                     <div className="flex flex-col min-w-0">
@@ -364,7 +364,7 @@ const RecipientRow = ({
         <div className="relative flex-1 min-w-0">
           <div 
             ref={reasonInputRef}
-            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 bg-white transition-all"
+            className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 focus-within:border-CloudbyzBlue focus-within:ring-1 focus-within:ring-CloudbyzBlue bg-white transition-all"
             onClick={() => !isCustomReason && setShowReasonDropdown(true)}
           >
             <FileText size={18} className="text-gray-500 mr-2 flex-shrink-0" />
@@ -403,8 +403,8 @@ const RecipientRow = ({
                 <div
                   key={i}
                   ref={selectedReasonIndex === i ? selectedReasonRef : null}
-                  className={`px-4 py-2 hover:bg-blue-50 cursor-pointer ${
-                    selectedReasonIndex === i ? 'bg-blue-50' : ''
+                  className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer ${
+                    selectedReasonIndex === i ? 'bg-CloudbyzBlue/10' : ''
                   }`}
                   onClick={() => handleReasonSelect(reason)}
                   onMouseEnter={() => setSelectedReasonIndex(i)}
@@ -417,8 +417,8 @@ const RecipientRow = ({
                 <div
                   key={`custom-${i}`}
                   ref={selectedReasonIndex === reasonOptions.length + i ? selectedReasonRef : null}
-                  className={`px-4 py-2 hover:bg-blue-50 cursor-pointer ${
-                    selectedReasonIndex === reasonOptions.length + i ? 'bg-blue-50' : ''
+                  className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer ${
+                    selectedReasonIndex === reasonOptions.length + i ? 'bg-CloudbyzBlue/10' : ''
                   }`}
                   onClick={() => handleReasonSelect(reason)}
                   onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length + i)}
@@ -429,13 +429,13 @@ const RecipientRow = ({
 
               <div
                 ref={selectedReasonIndex === reasonOptions.length + otherReasons.length ? selectedReasonRef : null}
-                className={`px-4 py-2 hover:bg-blue-50 cursor-pointer border-t ${
-                  selectedReasonIndex === reasonOptions.length + otherReasons.length ? 'bg-blue-50' : ''
+                className={`px-4 py-2 hover:bg-CloudbyzBlue/10 cursor-pointer border-t ${
+                  selectedReasonIndex === reasonOptions.length + otherReasons.length ? 'bg-CloudbyzBlue/10' : ''
                 }`}
                 onClick={() => handleReasonSelect('Other')}
                 onMouseEnter={() => setSelectedReasonIndex(reasonOptions.length + otherReasons.length)}
               >
-                <span className="text-sm font-medium text-blue-600">Other reason...</span>
+                <span className="text-sm font-medium text-CloudbyzBlue">Other reason...</span>
               </div>
             </div>
           )}
@@ -502,7 +502,7 @@ const Recipients = () => {
   };
 
   const recipientColors = [
-    '#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#EF4444',
+    '#009edb', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#EF4444',
   ];
 
   const updateRecipient = (index, newData) => {
@@ -575,7 +575,7 @@ const Recipients = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-CloudbyzBlue/10 via-indigo-50 to-purple-50 pt-14">
-      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white to-white backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
+      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white/70 to-CloudbyzBlue/10 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center w-1/3">
           <a
             href="https://www.google.com"
@@ -597,7 +597,14 @@ const Recipients = () => {
         <div className="flex-1 text-center">
           <h1 className="text-xl font-semibold text-CloudbyzBlue">Setup the Signature</h1>
         </div>
-        <div className="w-1/3"></div>
+        <div className="w-1/3 flex justify-end">
+          <a
+            href="https://www.google.com"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-CloudbyzBlue hover:text-white bg-white hover:bg-CloudbyzBlue rounded-lg transition-all duration-200 border border-CloudbyzBlue hover:border-transparent"
+          >
+            Add Bulk Signees
+          </a>
+        </div>
       </header>
 
       <main className="container mx-auto px-4 py-24 max-w-5xl">
@@ -608,7 +615,7 @@ const Recipients = () => {
               id="signInOrder"
               checked={showSignInOrder}
               onChange={() => setShowSignInOrder(!showSignInOrder)}
-              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+              className="rounded border-gray-300 text-CloudbyzBlue focus:ring-CloudbyzBlue"
             />
             <label htmlFor="signInOrder" className="ml-2 text-sm font-medium text-gray-700">
               Sign in order?
@@ -687,5 +694,3 @@ const RecipientPage = () => {
 };
 
 export default RecipientPage;
-
-export default RecipientPage
