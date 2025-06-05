@@ -6,7 +6,6 @@ import {
   Mail, Plus, CheckCircle2, XCircle, X 
 } from 'lucide-react';
 
-// Toast component for displaying success/error messages
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -40,7 +39,6 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// Navbar component for the top navigation bar
 const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
@@ -55,7 +53,6 @@ const Navbar = () => {
   );
 };
 
-// RecipientRow component for individual recipient entries
 const RecipientRow = ({ 
   index, 
   recipient, 
@@ -68,7 +65,6 @@ const RecipientRow = ({
   otherReasons,
   onAddTempReason
 }) => {
-  // State management for dropdowns and input values
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,7 +74,6 @@ const RecipientRow = ({
   const [selectedReasonIndex, setSelectedReasonIndex] = useState(-1);
   const [tempInputValue, setTempInputValue] = useState('');
   
-  // Refs for handling dropdowns and selections
   const userInputRef = useRef(null);
   const userDropdownRef = useRef(null);
   const reasonInputRef = useRef(null);
@@ -86,7 +81,6 @@ const RecipientRow = ({
   const selectedUserRef = useRef(null);
   const selectedReasonRef = useRef(null);
 
-  // Filter users based on search term
   const filteredUsers = users
     .filter(user => 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,7 +88,6 @@ const RecipientRow = ({
     )
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Helper function to get initials from name
   const getInitials = (name) => {
     if (!name) return '';
     const names = name.split(' ');
@@ -104,7 +97,6 @@ const RecipientRow = ({
     return name[0].toUpperCase();
   };
 
-  // Handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target) && 
@@ -126,7 +118,6 @@ const RecipientRow = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isCustomReason, tempInputValue]);
 
-  // Handle dropdown scroll for keyboard navigation
   useEffect(() => {
     if (selectedUserRef.current && userDropdownRef.current) {
       const dropdownRect = userDropdownRef.current.getBoundingClientRect();
@@ -153,7 +144,6 @@ const RecipientRow = ({
     }
   }, [selectedReasonIndex]);
 
-  // Keyboard navigation handlers
   const handleUserKeyDown = (e) => {
     if (!showUserDropdown || filteredUsers.length === 0) return;
 
@@ -224,7 +214,6 @@ const RecipientRow = ({
     }
   };
 
-  // Selection handlers
   const handleUserSelect = (user) => {
     updateRecipient(index, { 
       ...recipient,
@@ -266,7 +255,6 @@ const RecipientRow = ({
     }
   }, [customReason]);
 
-  // Input change handlers
   const handleUserInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -482,7 +470,6 @@ const RecipientRow = ({
   );
 };
 
-// Main Recipients component for managing the list of recipients
 const Recipients = () => {
   const [showSignInOrder, setShowSignInOrder] = useState(false);
   const [recipients, setRecipients] = useState([
@@ -494,7 +481,6 @@ const Recipients = () => {
   const [tempReasons, setTempReasons] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // Fetch initial data
   useEffect(() => {
     fetch('http://localhost:3000/api/data')
       .then(response => response.json())
@@ -588,8 +574,8 @@ const Recipients = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-14">
-      <header className="bg-white/70 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
+    <div className="min-h-screen bg-gradient-to-br from-CloudbyzBlue/10 via-indigo-50 to-purple-50 pt-14">
+      <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white to-white backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center w-1/3">
           <a
             href="https://www.google.com"
@@ -609,7 +595,7 @@ const Recipients = () => {
           </a>
         </div>
         <div className="flex-1 text-center">
-          <h1 className="text-xl font-semibold text-gray-800">Setup the Signature</h1>
+          <h1 className="text-xl font-semibold text-CloudbyzBlue">Setup the Signature</h1>
         </div>
         <div className="w-1/3"></div>
       </header>
@@ -662,7 +648,7 @@ const Recipients = () => {
           <div className="mt-6">
             <button
               onClick={addNewRecipient}
-              className="flex items-center bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-5 py-2.5 rounded-lg transition-colors shadow-md shadow-blue-500/20"
+              className="flex items-center bg-CloudbyzBlue hover:bg-CloudbyzBlue/90 active:bg-CloudbyzBlue text-white px-5 py-2.5 rounded-lg transition-colors shadow-md shadow-CloudbyzBlue/20"
             >
               <Plus size={18} className="mr-2" />
               Add Another Recipient
@@ -691,7 +677,6 @@ const Recipients = () => {
   );
 };
 
-// Main App component
 const RecipientPage = () => {
   return (
     <div className="min-h-screen bg-gray-100">
@@ -702,3 +687,5 @@ const RecipientPage = () => {
 };
 
 export default RecipientPage;
+
+export default RecipientPage
