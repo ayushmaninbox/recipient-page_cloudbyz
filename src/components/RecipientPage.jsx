@@ -21,7 +21,6 @@ import {
   Mail, Plus, CheckCircle2, XCircle, X
 } from 'lucide-react';
 
-// Toast component remains unchanged
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -55,7 +54,6 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// Navbar component remains unchanged
 const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
@@ -368,7 +366,7 @@ const RecipientRow = ({
           {showUserDropdown && (
             <div 
               ref={userDropdownRef} 
-              className="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[200] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, i) => (
@@ -448,7 +446,7 @@ const RecipientRow = ({
           {showReasonDropdown && !isCustomReason && (
             <div 
               ref={reasonDropdownRef} 
-              className="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-[200] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
               {reasonOptions.map((reason, i) => (
                 <div
