@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, ChevronDown, Trash2, GripVertical, FileText, 
@@ -80,6 +95,21 @@ const RecipientRow = ({
   const reasonDropdownRef = useRef(null);
   const selectedUserRef = useRef(null);
   const selectedReasonRef = useRef(null);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: recipient.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+  };
 
   const filteredUsers = users
     .filter(user => 
@@ -278,8 +308,13 @@ const RecipientRow = ({
     }
   };
 
-  const content = (
-    <div className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl" style={{ zIndex: showUserDropdown || showReasonDropdown ? 50 - index : 10 }}>
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl"
+    >
       <div 
         className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl" 
         style={{ backgroundColor: colors[index % colors.length] }}
@@ -287,7 +322,7 @@ const RecipientRow = ({
 
       <div className="flex items-center px-6 py-4">
         {showOrder && (
-          <div className="flex items-center mr-3">
+          <div className="flex items-center mr-3" {...listeners}>
             <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
               {index + 1}
             </span>
@@ -450,24 +485,6 @@ const RecipientRow = ({
       </div>
     </div>
   );
-
-  return (
-    <Draggable 
-      draggableId={recipient.id}
-      index={index}
-      isDragDisabled={!showOrder}
-    >
-      {(provided) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...(showOrder ? provided.dragHandleProps : {})}
-        >
-          {content}
-        </div>
-      )}
-    </Draggable>
-  );
 };
 
 const Recipients = () => {
@@ -480,6 +497,13 @@ const Recipients = () => {
   const [otherReasons, setOtherReasons] = useState([]);
   const [tempReasons, setTempReasons] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetch('http://localhost:3000/api/data')
@@ -523,14 +547,17 @@ const Recipients = () => {
     setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
   };
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-
-    const items = Array.from(recipients);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    setRecipients(items);
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      setRecipients((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const addTempReason = (reason) => {
@@ -622,35 +649,34 @@ const Recipients = () => {
             </label>
           </div>
 
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="recipients">
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                >
-                  <div className="space-y-4">
-                    {recipients.map((recipient, index) => (
-                      <RecipientRow
-                        key={recipient.id}
-                        index={index}
-                        recipient={recipient}
-                        updateRecipient={updateRecipient}
-                        deleteRecipient={deleteRecipient}
-                        users={users}
-                        reasonOptions={[...signatureReasons, ...tempReasons]}
-                        otherReasons={otherReasons}
-                        showOrder={showSignInOrder}
-                        colors={recipientColors}
-                        onAddTempReason={addTempReason}
-                      />
-                    ))}
-                  </div>
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={recipients.map(r => r.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-4">
+                {recipients.map((recipient, index) => (
+                  <RecipientRow
+                    key={recipient.id}
+                    index={index}
+                    recipient={recipient}
+                    updateRecipient={updateRecipient}
+                    deleteRecipient={deleteRecipient}
+                    users={users}
+                    reasonOptions={[...signatureReasons, ...tempReasons]}
+                    otherReasons={otherReasons}
+                    showOrder={showSignInOrder}
+                    colors={recipientColors}
+                    onAddTempReason={addTempReason}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
 
           <div className="mt-6">
             <button
