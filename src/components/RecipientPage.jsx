@@ -7,17 +7,17 @@ import {
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
+    const timer = setTimeout(onClose, 2000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.3 }}
+        initial={{ opacity: 0, y: -50, scale: 0.3 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-        className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+        className={`fixed top-20 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
           type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
         }`}
       >
@@ -42,12 +42,11 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
       <img src="/images/cloudbyz.png" alt="Cloudbyz Logo" className="h-8 object-contain" />
-      <a 
-        href="https://www.google.com" 
+      <button 
         className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
       >
         <User className="w-5 h-5 text-slate-600" />
-      </a>
+      </button>
     </nav>
   );
 };
