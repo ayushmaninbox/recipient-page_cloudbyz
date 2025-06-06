@@ -648,7 +648,12 @@ const Recipients = () => {
 
           <div 
             ref={recipientsContainerRef}
-            className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto"
+            className="space-y-4 min-h-[400px]"
+            style={{
+              maxHeight: recipients.length > 4 ? 'calc(100vh - 300px)' : 'auto',
+              overflowY: recipients.length > 4 ? 'auto' : 'visible',
+              overflowX: 'visible'
+            }}
           >
             {recipients.map((recipient, index) => (
               <RecipientRow
