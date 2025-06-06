@@ -219,11 +219,11 @@ const RecipientRow = ({
 
   const handleUserSelect = (user) => {
     const isDuplicate = recipients.some((r, i) => 
-      i !== index && r.name === user.name && r.email === user.email
+      i !== index && r.email === user.email
     );
 
     if (isDuplicate) {
-      showToast('This person has already been added as a recipient', 'error');
+      showToast('This email is already in use by another recipient', 'error');
       return;
     }
 
@@ -274,12 +274,12 @@ const RecipientRow = ({
 
     // Check for duplicates when manually typing
     const matchingUser = users.find(user => 
-      user.name.toLowerCase() === value.toLowerCase() && 
-      recipients.some((r, i) => i !== index && r.name === user.name && r.email === user.email)
+      user.email.toLowerCase() === recipient.email.toLowerCase() && 
+      recipients.some((r, i) => i !== index && r.email === user.email)
     );
 
     if (matchingUser) {
-      showToast('This person has already been added as a recipient', 'error');
+      showToast('This email is already in use by another recipient', 'error');
       return;
     }
 
@@ -291,11 +291,11 @@ const RecipientRow = ({
     
     // Check for duplicates when manually typing email
     const isDuplicate = recipients.some((r, i) => 
-      i !== index && r.name === recipient.name && r.email === value
+      i !== index && r.email === value
     );
 
     if (isDuplicate) {
-      showToast('This person has already been added as a recipient', 'error');
+      showToast('This email is already in use by another recipient', 'error');
       return;
     }
 
