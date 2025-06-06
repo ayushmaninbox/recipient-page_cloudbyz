@@ -14,10 +14,10 @@ const Toast = ({ message, type, onClose }) => {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.3 }}
+        initial={{ opacity: 0, y: -50, scale: 0.3 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-        className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+        className={`fixed top-20 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
           type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
         }`}
       >
@@ -42,12 +42,9 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 h-14 px-6 flex justify-between items-center">
       <img src="/images/cloudbyz.png" alt="Cloudbyz Logo" className="h-8 object-contain" />
-      <a 
-        href="https://www.google.com" 
-        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
-      >
+      <div className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
         <User className="w-5 h-5 text-slate-600" />
-      </a>
+      </div>
     </nav>
   );
 };
@@ -281,13 +278,16 @@ const RecipientRow = ({
   };
 
   return (
-    <div
-      className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl cursor-move"
+    <motion.div
+      className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl"
       style={{ zIndex: showUserDropdown || showReasonDropdown ? 50 - index : 10 }}
       draggable={showOrder}
       onDragStart={(e) => onDragStart(e, index)}
       onDrop={(e) => onDrop(e, index)}
       onDragOver={onDragOver}
+      initial={false}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <div 
         className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl" 
@@ -457,7 +457,7 @@ const RecipientRow = ({
           <Trash2 size={20} />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -471,6 +471,7 @@ const Recipients = () => {
   const [otherReasons, setOtherReasons] = useState([]);
   const [tempReasons, setTempReasons] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const recipientsContainerRef = useRef(null);
 
   useEffect(() => {
     fetch('http://localhost:3000/api/data')
@@ -516,11 +517,20 @@ const Recipients = () => {
 
   const handleDragStart = (e, index) => {
     e.dataTransfer.setData('dragIndex', index.toString());
+    const draggedElement = e.target;
+    draggedElement.style.opacity = '0.5';
+    draggedElement.style.transform = 'scale(1.02)';
   };
 
   const handleDrop = (e, targetIndex) => {
     e.preventDefault();
     const dragIndex = parseInt(e.dataTransfer.getData('dragIndex'), 10);
+    const draggedElement = document.querySelector(`[draggable="true"]`);
+    if (draggedElement) {
+      draggedElement.style.opacity = '1';
+      draggedElement.style.transform = 'none';
+    }
+    
     if (dragIndex !== targetIndex) {
       const items = Array.from(recipients);
       const [reorderedItem] = items.splice(dragIndex, 1);
@@ -531,6 +541,22 @@ const Recipients = () => {
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    const draggedElement = document.querySelector(`[draggable="true"][style*="opacity: 0.5"]`);
+    if (draggedElement) {
+      const containerRect = recipientsContainerRef.current.getBoundingClientRect();
+      const { clientY } = e;
+      
+      if (clientY < containerRect.top + 20) {
+        recipientsContainerRef.current.scrollTop -= 10;
+      } else if (clientY > containerRect.bottom - 20) {
+        recipientsContainerRef.current.scrollTop += 10;
+      }
+    }
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = '1';
+    e.target.style.transform = 'none';
   };
 
   const addTempReason = (reason) => {
@@ -577,8 +603,7 @@ const Recipients = () => {
     <div className="min-h-screen bg-gradient-to-br from-CloudbyzBlue/10 via-indigo-50 to-purple-50 pt-14">
       <header className="bg-gradient-to-r from-CloudbyzBlue/10 via-white/70 to-CloudbyzBlue/10 backdrop-blur-sm shadow-sm px-6 py-3 flex items-center fixed top-14 left-0 right-0 z-20">
         <div className="flex items-center w-1/3">
-          <a
-            href="https://www.google.com"
+          <button
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all duration-200 group"
           >
             <svg 
@@ -592,18 +617,17 @@ const Recipients = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
             Back
-          </a>
+          </button>
         </div>
         <div className="flex-1 text-center">
           <h1 className="text-xl font-semibold text-CloudbyzBlue">Setup the Signature</h1>
         </div>
         <div className="w-1/3 flex justify-end">
-          <a
-            href="https://www.google.com"
+          <button
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-CloudbyzBlue hover:text-white bg-white hover:bg-CloudbyzBlue rounded-lg transition-all duration-200 border border-CloudbyzBlue hover:border-transparent"
           >
             Add Bulk Signees
-          </a>
+          </button>
         </div>
       </header>
 
@@ -622,7 +646,10 @@ const Recipients = () => {
             </label>
           </div>
 
-          <div className="space-y-4">
+          <div 
+            ref={recipientsContainerRef}
+            className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto"
+          >
             {recipients.map((recipient, index) => (
               <RecipientRow
                 key={recipient.id}
