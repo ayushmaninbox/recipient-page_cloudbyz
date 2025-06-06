@@ -7,7 +7,7 @@ import {
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 2000);
+    const timer = setTimeout(onClose, 1000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -17,8 +17,8 @@ const Toast = ({ message, type, onClose }) => {
         initial={{ opacity: 0, y: -50, scale: 0.3 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-        className={`fixed top-20 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
-          type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
+        className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg backdrop-blur-sm ${
+          type === 'success' ? 'bg-emerald-50/90 text-emerald-800' : 'bg-red-50/90 text-red-800'
         }`}
       >
         {type === 'success' ? (
@@ -64,7 +64,9 @@ const RecipientRow = ({
   onAddTempReason,
   onDragStart,
   onDrop,
-  onDragOver
+  onDragOver,
+  recipients,
+  showToast
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
@@ -216,6 +218,15 @@ const RecipientRow = ({
   };
 
   const handleUserSelect = (user) => {
+    const isDuplicate = recipients.some((r, i) => 
+      i !== index && r.name === user.name && r.email === user.email
+    );
+
+    if (isDuplicate) {
+      showToast('This person has already been added as a recipient', 'error');
+      return;
+    }
+
     updateRecipient(index, { 
       ...recipient,
       name: user.name, 
@@ -260,11 +271,34 @@ const RecipientRow = ({
     const value = e.target.value;
     setSearchTerm(value);
     setSelectedUserIndex(-1);
+
+    // Check for duplicates when manually typing
+    const matchingUser = users.find(user => 
+      user.name.toLowerCase() === value.toLowerCase() && 
+      recipients.some((r, i) => i !== index && r.name === user.name && r.email === user.email)
+    );
+
+    if (matchingUser) {
+      showToast('This person has already been added as a recipient', 'error');
+      return;
+    }
+
     updateRecipient(index, { ...recipient, name: value });
   };
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
+    
+    // Check for duplicates when manually typing email
+    const isDuplicate = recipients.some((r, i) => 
+      i !== index && r.name === recipient.name && r.email === value
+    );
+
+    if (isDuplicate) {
+      showToast('This person has already been added as a recipient', 'error');
+      return;
+    }
+
     updateRecipient(index, { ...recipient, email: value });
   };
 
@@ -638,6 +672,8 @@ const Recipients = () => {
                 onDragStart={handleDragStart}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
+                recipients={recipients}
+                showToast={showToast}
               />
             ))}
           </div>
