@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, ChevronDown, Trash2, GripVertical, FileText, 
@@ -63,7 +62,10 @@ const RecipientRow = ({
   colors,
   reasonOptions,
   otherReasons,
-  onAddTempReason
+  onAddTempReason,
+  onDragStart,
+  onDrop,
+  onDragOver
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
@@ -278,8 +280,15 @@ const RecipientRow = ({
     }
   };
 
-  const content = (
-    <div className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl" style={{ zIndex: showUserDropdown || showReasonDropdown ? 50 - index : 10 }}>
+  return (
+    <div
+      className="relative mb-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-visible transition-all hover:shadow-xl cursor-move"
+      style={{ zIndex: showUserDropdown || showReasonDropdown ? 50 - index : 10 }}
+      draggable={showOrder}
+      onDragStart={(e) => onDragStart(e, index)}
+      onDrop={(e) => onDrop(e, index)}
+      onDragOver={onDragOver}
+    >
       <div 
         className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl" 
         style={{ backgroundColor: colors[index % colors.length] }}
@@ -291,7 +300,7 @@ const RecipientRow = ({
             <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
               {index + 1}
             </span>
-            <GripVertical size={18} className="ml-2 text-gray-400 cursor-move" />
+            <GripVertical size={18} className="ml-2 text-gray-400" />
           </div>
         )}
 
@@ -450,24 +459,6 @@ const RecipientRow = ({
       </div>
     </div>
   );
-
-  return (
-    <Draggable 
-      draggableId={recipient.id}
-      index={index}
-      isDragDisabled={!showOrder}
-    >
-      {(provided) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...(showOrder ? provided.dragHandleProps : {})}
-        >
-          {content}
-        </div>
-      )}
-    </Draggable>
-  );
 };
 
 const Recipients = () => {
@@ -523,14 +514,23 @@ const Recipients = () => {
     setRecipients([...recipients, { id: newId, name: '', email: '', reason: '' }]);
   };
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
+  const handleDragStart = (e, index) => {
+    e.dataTransfer.setData('dragIndex', index.toString());
+  };
 
-    const items = Array.from(recipients);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    const dragIndex = parseInt(e.dataTransfer.getData('dragIndex'), 10);
+    if (dragIndex !== targetIndex) {
+      const items = Array.from(recipients);
+      const [reorderedItem] = items.splice(dragIndex, 1);
+      items.splice(targetIndex, 0, reorderedItem);
+      setRecipients(items);
+    }
+  };
 
-    setRecipients(items);
+  const handleDragOver = (e) => {
+    e.preventDefault();
   };
 
   const addTempReason = (reason) => {
@@ -622,35 +622,26 @@ const Recipients = () => {
             </label>
           </div>
 
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="recipients">
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                >
-                  <div className="space-y-4">
-                    {recipients.map((recipient, index) => (
-                      <RecipientRow
-                        key={recipient.id}
-                        index={index}
-                        recipient={recipient}
-                        updateRecipient={updateRecipient}
-                        deleteRecipient={deleteRecipient}
-                        users={users}
-                        reasonOptions={[...signatureReasons, ...tempReasons]}
-                        otherReasons={otherReasons}
-                        showOrder={showSignInOrder}
-                        colors={recipientColors}
-                        onAddTempReason={addTempReason}
-                      />
-                    ))}
-                  </div>
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+          <div className="space-y-4">
+            {recipients.map((recipient, index) => (
+              <RecipientRow
+                key={recipient.id}
+                index={index}
+                recipient={recipient}
+                updateRecipient={updateRecipient}
+                deleteRecipient={deleteRecipient}
+                users={users}
+                reasonOptions={[...signatureReasons, ...tempReasons]}
+                otherReasons={otherReasons}
+                showOrder={showSignInOrder}
+                colors={recipientColors}
+                onAddTempReason={addTempReason}
+                onDragStart={handleDragStart}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+              />
+            ))}
+          </div>
 
           <div className="mt-6">
             <button
